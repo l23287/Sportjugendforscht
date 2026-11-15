@@ -8,6 +8,8 @@ import { computeAverageDuration, computeExerciseUsage } from '../lib/stats';
 import { CATEGORICAL_PALETTE_DARK, CHART_OTHER_COLOR } from '../lib/chartPalette';
 import { formatDuration } from '../lib/time';
 import { useSport } from '../context/SportContext';
+// C2: Einheitliches Sporticon mit farbiger Umrandung.
+import { SportBadge } from '../components/SportBadge';
 
 const MAX_NAMED_SLICES = 5;
 
@@ -52,7 +54,8 @@ export function Statistics() {
         />
         <StatTile
           // C1: Emoji und Name aus dem Sportart-Objekt.
-          icon={<span className="text-lg leading-none">{sport.emoji}</span>}
+          // C2: SportBadge füllt die Icon-Fläche der Kachel aus (gleiche Größe 44px).
+          icon={<SportBadge sport={sport} size="md" />}
           label="Sportart"
           value={sport.name}
         />

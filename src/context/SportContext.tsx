@@ -1,13 +1,17 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type { Sport, SportId } from '../types';
 import {
+  CUSTOM_SPORT_DEFAULT_COLOR,
   CUSTOM_SPORT_EMOJI,
   DEFAULT_SPORT_ID,
   PRESET_SPORTS,
   cleanSportName,
+  isAllowedCustomColor,
+  isAllowedCustomEmoji,
   legacySportNameToId,
   sanitizeCustomSports,
   validateSportName,
+  type SportAppearance,
 } from '../lib/sport';
 import { loadJSON, saveJSON } from '../lib/storage';
 import { generateId } from '../lib/id';
@@ -23,7 +27,10 @@ interface SportContextValue {
   customSports: Sport[];
   /** C1: Wählt eine Sportart über ihre ID. */
   setSport: (id: SportId) => void;
-  addCustomSport: (name: string) => AddSportResult;
+  // C2: Optionales Aussehen (Symbol + Farbe) beim Anlegen.
+  addCustomSport: (name: string, appearance?: Partial<SportAppearance>) => AddSportResult;
+  // C2: Symbol/Farbe einer eigenen Sportart nachträglich ändern.
+  updateCustomSport: (id: SportId, appearance: Partial<SportAppearance>) => void;
   removeCustomSport: (id: SportId) => void;
 }
 
@@ -70,18 +77,34 @@ export function SportProvider({ children }: { children: ReactNode }) {
       // nicht enthalten (State-Update steht aus). Unbekannte IDs fängt der Fallback oben ab.
       setSport: (id) => setSportId(id),
       // C1: Validiert (leer, Länge, Duplikat ohne Groß-/Kleinschreibung) und legt eine eigene Sportart an.
-      addCustomSport: (name) => {
+      addCustomSport: (name, appearance) => {
         const error = validateSportName(name, sports);
         if (error) return { ok: false, error };
         const newSport: Sport = {
           id: `custom-${generateId()}`,
           name: cleanSportName(name),
-          emoji: CUSTOM_SPORT_EMOJI,
+          // C2: Gewähltes Symbol/Farbe übernehmen, sofern aus der erlaubten Auswahl – sonst Standard.
+          emoji: isAllowedCustomEmoji(appearance?.emoji) ? appearance.emoji : CUSTOM_SPORT_EMOJI,
+          color: isAllowedCustomColor(appearance?.color) ? appearance.color : CUSTOM_SPORT_DEFAULT_COLOR,
           category: 'Eigene',
           custom: true,
         };
         setCustomSports((prev) => [...prev, newSport]);
         return { ok: true, sport: newSport };
+      },
+      // C2: Ändert nur gültige Werte; Vorauswahl-Sportarten sind nicht betroffen (liegen nicht in customSports).
+      updateCustomSport: (id, appearance) => {
+        setCustomSports((prev) =>
+          prev.map((s) =>
+            s.id === id
+              ? {
+                  ...s,
+                  emoji: isAllowedCustomEmoji(appearance.emoji) ? appearance.emoji : s.emoji,
+                  color: isAllowedCustomColor(appearance.color) ? appearance.color : s.color,
+                }
+              : s,
+          ),
+        );
       },
       // C1: Entfernt eine eigene Sportart. Ist sie aktiv, greift automatisch der Fallback auf die Standard-Sportart.
       // Hinweis für C5: Sobald Pläne/Übungen einer Sportart zugeordnet sind, muss hier über deren Verbleib entschieden werden.

@@ -13,7 +13,8 @@ bis zur Trainingsdurchführung mit Timer.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
-  die in den Einstellungen hinzugefügt und gelöscht werden können (C1).
+  die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes
+  Symbol und eine Farbe für die Umrandung des Sporticons; bei eigenen Sportarten frei wählbar (C2).
 
 Die Weiterentwicklung ist in Chunks dokumentiert, siehe [`docs/chunks/`](docs/chunks/README.md).
 

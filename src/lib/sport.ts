@@ -8,45 +8,91 @@ import type { Sport, SportId } from '../types';
 // "Beach Volleyball" bleibt zusätzlich zu "Volleyball" erhalten, da es bereits vor C1
 // auswählbar war und bestehende Nutzer:innen es gespeichert haben können.
 // Die IDs sind stabile Slugs und dürfen NICHT geändert werden (Zuordnung von Daten ab C5).
+// C2: Jede Sportart hat eine Akzentfarbe für die Umrandung des Sporticons. Auswahlregeln:
+//  - Farbe passt zur Sportart, wo naheliegend (Basketball orange, Tischtennis rot, Fußball grün, Schwimmen blau …)
+//  - Sportarten mit gleichem Emoji sind über die Farbe unterscheidbar (Volleyball/Beach Volleyball, Judo/Karate)
+//  - Kontrast mindestens 3:1 (WCAG 2.1, 1.4.11 Nicht-Text-Kontrast) gegen alle Hintergründe der App
+//    (#0a0f1c, #111a2c, #16223c, #223353) – geprüft, siehe docs/chunks/C2.md
 export const PRESET_SPORTS: Sport[] = [
   // Ballsport
-  { id: 'fussball', name: 'Fußball', emoji: '⚽', category: 'Ballsport', custom: false },
-  { id: 'handball', name: 'Handball', emoji: '🤾', category: 'Ballsport', custom: false },
-  { id: 'basketball', name: 'Basketball', emoji: '🏀', category: 'Ballsport', custom: false },
-  { id: 'volleyball', name: 'Volleyball', emoji: '🏐', category: 'Ballsport', custom: false },
-  { id: 'beach-volleyball', name: 'Beach Volleyball', emoji: '🏐', category: 'Ballsport', custom: false },
-  { id: 'hockey', name: 'Hockey', emoji: '🏑', category: 'Ballsport', custom: false },
+  { id: 'fussball', name: 'Fußball', emoji: '⚽', color: '#22c55e', category: 'Ballsport', custom: false },
+  { id: 'handball', name: 'Handball', emoji: '🤾', color: '#60a5fa', category: 'Ballsport', custom: false },
+  { id: 'basketball', name: 'Basketball', emoji: '🏀', color: '#f97316', category: 'Ballsport', custom: false },
+  { id: 'volleyball', name: 'Volleyball', emoji: '🏐', color: '#facc15', category: 'Ballsport', custom: false },
+  { id: 'beach-volleyball', name: 'Beach Volleyball', emoji: '🏐', color: '#2dd4bf', category: 'Ballsport', custom: false },
+  { id: 'hockey', name: 'Hockey', emoji: '🏑', color: '#818cf8', category: 'Ballsport', custom: false },
   // Rückschlagsport
-  { id: 'tischtennis', name: 'Tischtennis', emoji: '🏓', category: 'Rückschlagsport', custom: false },
-  { id: 'tennis', name: 'Tennis', emoji: '🎾', category: 'Rückschlagsport', custom: false },
-  { id: 'badminton', name: 'Badminton', emoji: '🏸', category: 'Rückschlagsport', custom: false },
+  { id: 'tischtennis', name: 'Tischtennis', emoji: '🏓', color: '#ef4444', category: 'Rückschlagsport', custom: false },
+  { id: 'tennis', name: 'Tennis', emoji: '🎾', color: '#bef264', category: 'Rückschlagsport', custom: false },
+  { id: 'badminton', name: 'Badminton', emoji: '🏸', color: '#e2e8f0', category: 'Rückschlagsport', custom: false },
   // Turnen & Tanz
-  { id: 'turnen', name: 'Turnen', emoji: '🤸', category: 'Turnen & Tanz', custom: false },
-  { id: 'tanzen', name: 'Tanzen', emoji: '💃', category: 'Turnen & Tanz', custom: false },
+  { id: 'turnen', name: 'Turnen', emoji: '🤸', color: '#c084fc', category: 'Turnen & Tanz', custom: false },
+  { id: 'tanzen', name: 'Tanzen', emoji: '💃', color: '#f472b6', category: 'Turnen & Tanz', custom: false },
   // Kampfsport
-  { id: 'judo', name: 'Judo', emoji: '🥋', category: 'Kampfsport', custom: false },
-  { id: 'karate', name: 'Karate', emoji: '🥋', category: 'Kampfsport', custom: false },
+  { id: 'judo', name: 'Judo', emoji: '🥋', color: '#f8fafc', category: 'Kampfsport', custom: false },
+  { id: 'karate', name: 'Karate', emoji: '🥋', color: '#fde047', category: 'Kampfsport', custom: false },
   // Ausdauer
-  { id: 'leichtathletik', name: 'Leichtathletik', emoji: '🏃', category: 'Ausdauer', custom: false },
-  { id: 'radsport', name: 'Radsport', emoji: '🚴', category: 'Ausdauer', custom: false },
-  { id: 'triathlon', name: 'Triathlon', emoji: '🏅', category: 'Ausdauer', custom: false },
-  { id: 'skisport', name: 'Skisport', emoji: '⛷️', category: 'Ausdauer', custom: false },
+  { id: 'leichtathletik', name: 'Leichtathletik', emoji: '🏃', color: '#fb7185', category: 'Ausdauer', custom: false },
+  { id: 'radsport', name: 'Radsport', emoji: '🚴', color: '#fbbf24', category: 'Ausdauer', custom: false },
+  { id: 'triathlon', name: 'Triathlon', emoji: '🏅', color: '#a78bfa', category: 'Ausdauer', custom: false },
+  { id: 'skisport', name: 'Skisport', emoji: '⛷️', color: '#bae6fd', category: 'Ausdauer', custom: false },
   // Wassersport
-  { id: 'schwimmen', name: 'Schwimmen', emoji: '🏊', category: 'Wassersport', custom: false },
-  { id: 'kanu', name: 'Kanu', emoji: '🛶', category: 'Wassersport', custom: false },
-  { id: 'rudern', name: 'Rudern', emoji: '🚣', category: 'Wassersport', custom: false },
-  { id: 'segeln', name: 'Segeln', emoji: '⛵', category: 'Wassersport', custom: false },
+  { id: 'schwimmen', name: 'Schwimmen', emoji: '🏊', color: '#38bdf8', category: 'Wassersport', custom: false },
+  { id: 'kanu', name: 'Kanu', emoji: '🛶', color: '#34d399', category: 'Wassersport', custom: false },
+  { id: 'rudern', name: 'Rudern', emoji: '🚣', color: '#67e8f9', category: 'Wassersport', custom: false },
+  { id: 'segeln', name: 'Segeln', emoji: '⛵', color: '#f1f5f9', category: 'Wassersport', custom: false },
   // Outdoor & Präzision
-  { id: 'reiten', name: 'Reiten', emoji: '🏇', category: 'Outdoor & Präzision', custom: false },
-  { id: 'golf', name: 'Golf', emoji: '⛳', category: 'Outdoor & Präzision', custom: false },
-  { id: 'schiesssport', name: 'Schießsport', emoji: '🎯', category: 'Outdoor & Präzision', custom: false },
-  { id: 'klettern', name: 'Klettern & Bergsport', emoji: '🧗', category: 'Outdoor & Präzision', custom: false },
+  { id: 'reiten', name: 'Reiten', emoji: '🏇', color: '#d6a26a', category: 'Outdoor & Präzision', custom: false },
+  { id: 'golf', name: 'Golf', emoji: '⛳', color: '#4ade80', category: 'Outdoor & Präzision', custom: false },
+  { id: 'schiesssport', name: 'Schießsport', emoji: '🎯', color: '#fb923c', category: 'Outdoor & Präzision', custom: false },
+  { id: 'klettern', name: 'Klettern & Bergsport', emoji: '🧗', color: '#a8a29e', category: 'Outdoor & Präzision', custom: false },
 ];
 
 export const DEFAULT_SPORT_ID: SportId = 'tischtennis';
 
-// C1: Neutrales Symbol für eigene Sportarten, bis C2 eigene Symbole/Farben einführt.
+// C1: Neutrales Standard-Symbol für eigene Sportarten.
+// C2: Wird nur noch verwendet, wenn beim Anlegen kein Symbol gewählt wurde bzw. für Altdaten aus C1.
 export const CUSTOM_SPORT_EMOJI = '🏅';
+
+// C2: Auswahl an Symbolen für eigene Sportarten. Bewusst eine feste Liste statt freier Eingabe,
+// damit keine beliebigen Zeichen/Texte als Icon gespeichert werden.
+export const CUSTOM_SPORT_EMOJIS: string[] = [
+  '🏅', '🏆', '🥏', '⚽', '🏀', '🎾', '🏃', '🚴',
+  '🏊', '🥊', '🤺', '🏋️', '🧘', '⛸️', '🛹', '🎳',
+];
+
+// C2: Farbauswahl für eigene Sportarten. Feste, vorab auf Kontrast geprüfte Palette (≥ 3:1 auf allen
+// App-Hintergründen) statt freier Farbwahl – so entsteht kein unsichtbares „Dunkel auf Dunkel“.
+export const CUSTOM_SPORT_COLORS: { value: string; label: string }[] = [
+  { value: '#f87171', label: 'Rot' },
+  { value: '#fb923c', label: 'Orange' },
+  { value: '#facc15', label: 'Gelb' },
+  { value: '#4ade80', label: 'Grün' },
+  { value: '#2dd4bf', label: 'Türkis' },
+  { value: '#38bdf8', label: 'Hellblau' },
+  { value: '#60a5fa', label: 'Blau' },
+  { value: '#a78bfa', label: 'Violett' },
+  { value: '#f472b6', label: 'Pink' },
+  { value: '#cbd5e1', label: 'Grau' },
+];
+
+// C2: Standardfarbe für eigene Sportarten ohne Auswahl bzw. Altdaten aus C1 (gespeichert ohne Farbe).
+export const CUSTOM_SPORT_DEFAULT_COLOR = '#a78bfa';
+
+// C2: Nur Werte aus den festen Listen werden akzeptiert (Schutz gegen manipulierte/veraltete localStorage-Daten).
+export function isAllowedCustomEmoji(emoji: unknown): emoji is string {
+  return typeof emoji === 'string' && CUSTOM_SPORT_EMOJIS.includes(emoji);
+}
+
+export function isAllowedCustomColor(color: unknown): color is string {
+  return typeof color === 'string' && CUSTOM_SPORT_COLORS.some((c) => c.value === color);
+}
+
+// C2: Aussehen einer eigenen Sportart (Symbol + Farbe).
+export interface SportAppearance {
+  emoji: string;
+  color: string;
+}
 
 // C1: Höchstlänge für eigene Sportarten (Kopfzeile/Sidebar schneiden lange Namen ab).
 export const SPORT_NAME_MAX_LENGTH = 30;
@@ -82,13 +128,21 @@ export function sanitizeCustomSports(value: unknown): Sport[] {
   const result: Sport[] = [];
   for (const entry of value) {
     if (!entry || typeof entry !== 'object') continue;
-    const { id, name } = entry as Partial<Sport>;
+    const { id, name, emoji, color } = entry as Partial<Sport>;
     if (typeof id !== 'string' || typeof name !== 'string') continue;
     const cleaned = cleanSportName(name).slice(0, SPORT_NAME_MAX_LENGTH);
     const normalized = normalizeSportName(cleaned);
     if (!cleaned || seen.has(normalized)) continue;
     seen.add(normalized);
-    result.push({ id, name: cleaned, emoji: CUSTOM_SPORT_EMOJI, category: 'Eigene', custom: true });
+    // C2: Symbol und Farbe übernehmen, falls gültig – sonst Standardwerte (z. B. für Altdaten aus C1).
+    result.push({
+      id,
+      name: cleaned,
+      emoji: isAllowedCustomEmoji(emoji) ? emoji : CUSTOM_SPORT_EMOJI,
+      color: isAllowedCustomColor(color) ? color : CUSTOM_SPORT_DEFAULT_COLOR,
+      category: 'Eigene',
+      custom: true,
+    });
   }
   return result;
 }

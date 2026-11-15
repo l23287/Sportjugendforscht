@@ -35,6 +35,8 @@ export interface Sport {
   id: SportId;
   name: string;
   emoji: string;
+  /** C2: Akzentfarbe (Hex, z. B. "#f97316") für die farbliche Umrandung des Sporticons. */
+  color: string;
   category: SportCategory;
   /** C1: true = von Nutzer:in angelegt (löschbar), false = Teil der Vorauswahl. */
   custom: boolean;

@@ -1,22 +1,40 @@
 // C1: Neue Komponente – Sportart-Auswahl für die Einstellungen.
 // Ersetzt die PillSelect-Auswahl, die bei 25+ Optionen (vor allem am Handy) unübersichtlich wäre:
 // aktuelle Sportart oben, darunter Suche, nach Kategorien gruppierte Liste und Formular für eigene Sportarten.
+// C2: Sporticons mit farbiger Umrandung (SportBadge); Symbol + Farbe für eigene Sportarten wählbar und änderbar.
 import { useMemo, useState, type FormEvent } from 'react';
-import { Check, Plus, X } from 'lucide-react';
+import { Check, Pencil, Plus, X } from 'lucide-react';
 import { useSport } from '../context/SportContext';
 import { SearchInput } from './SearchInput';
 import { PrimaryButton } from './PrimaryButton';
 import { ConfirmDialog } from './ConfirmDialog';
+import { Modal } from './Modal';
+import { SportBadge } from './SportBadge';
+import { SportAppearancePicker } from './SportAppearancePicker';
 import { inputClass, labelClass } from '../lib/formStyles';
-import { SPORT_NAME_MAX_LENGTH, cleanSportName, normalizeSportName } from '../lib/sport';
+import {
+  CUSTOM_SPORT_DEFAULT_COLOR,
+  CUSTOM_SPORT_EMOJI,
+  SPORT_NAME_MAX_LENGTH,
+  cleanSportName,
+  normalizeSportName,
+  type SportAppearance,
+} from '../lib/sport';
 import { SPORT_CATEGORIES, type Sport } from '../types';
 
 export function SportPicker() {
-  const { sport: activeSport, sports, setSport, addCustomSport, removeCustomSport } = useSport();
+  const { sport: activeSport, sports, setSport, addCustomSport, updateCustomSport, removeCustomSport } = useSport();
   const [query, setQuery] = useState('');
   const [newName, setNewName] = useState('');
   const [error, setError] = useState('');
   const [pendingDelete, setPendingDelete] = useState<Sport | null>(null);
+  // C2: Symbol/Farbe für die nächste neue eigene Sportart.
+  const [newAppearance, setNewAppearance] = useState<SportAppearance>({
+    emoji: CUSTOM_SPORT_EMOJI,
+    color: CUSTOM_SPORT_DEFAULT_COLOR,
+  });
+  // C2: Eigene Sportart, deren Symbol/Farbe gerade bearbeitet wird (inkl. Entwurf bis zum Speichern).
+  const [editing, setEditing] = useState<{ sport: Sport; draft: SportAppearance } | null>(null);
 
   // C1: Suche ignoriert Groß-/Kleinschreibung und überflüssige Leerzeichen.
   const groups = useMemo(() => {
@@ -31,7 +49,8 @@ export function SportPicker() {
   }, [sports, query]);
 
   function submitName(name: string) {
-    const result = addCustomSport(name);
+    // C2: Gewähltes Symbol + Farbe mitgeben.
+    const result = addCustomSport(name, newAppearance);
     if (!result.ok) {
       setError(result.error);
       return;
@@ -41,6 +60,18 @@ export function SportPicker() {
     setNewName('');
     setQuery('');
     setError('');
+    // C2: Auswahl für die nächste Sportart zurücksetzen.
+    setNewAppearance({ emoji: CUSTOM_SPORT_EMOJI, color: CUSTOM_SPORT_DEFAULT_COLOR });
+  }
+
+  // C2: Änderungen erst beim Speichern übernehmen (Abbrechen verwirft den Entwurf).
+  function saveEditing() {
+    if (editing) updateCustomSport(editing.sport.id, editing.draft);
+    setEditing(null);
+  }
+
+  function startEditing(item: Sport) {
+    setEditing({ sport: item, draft: { emoji: item.emoji, color: item.color } });
   }
 
   function handleSubmit(event: FormEvent) {
@@ -59,13 +90,23 @@ export function SportPicker() {
     <div className="flex flex-col gap-5">
       {/* C1: Aktuelle Auswahl gut sichtbar oben. */}
       <div className="flex items-center gap-3 rounded-2xl border border-border bg-bg-soft p-4">
-        <span className="text-3xl leading-none" aria-hidden="true">
-          {activeSport.emoji}
-        </span>
-        <div className="min-w-0">
+        {/* C2: Großes Sporticon mit Umrandung in der Sportfarbe. */}
+        <SportBadge sport={activeSport} size="lg" />
+        <div className="min-w-0 flex-1">
           <p className="text-xs text-muted-2">Aktuelle Sportart</p>
           <p className="truncate font-display text-lg font-bold text-ink">{activeSport.name}</p>
         </div>
+        {/* C2: Eigene Sportarten lassen sich auch hier direkt anpassen. */}
+        {activeSport.custom && (
+          <PrimaryButton
+            variant="ghost"
+            className="h-10 shrink-0 border border-border px-3 text-sm"
+            icon={<Pencil size={14} />}
+            onClick={() => startEditing(activeSport)}
+          >
+            Anpassen
+          </PrimaryButton>
+        )}
       </div>
 
       <SearchInput value={query} onChange={setQuery} placeholder="Sportart suchen…" />
@@ -92,6 +133,7 @@ export function SportPicker() {
                     sport={item}
                     selected={item.id === activeSport.id}
                     onSelect={() => setSport(item.id)}
+                    onEdit={item.custom ? () => startEditing(item) : undefined}
                     onDelete={item.custom ? () => setPendingDelete(item) : undefined}
                   />
                 ))}
@@ -129,7 +171,46 @@ export function SportPicker() {
             {error}
           </p>
         )}
+        {/* C2: Symbol + Farbe der neuen Sportart wählen, mit Live-Vorschau. */}
+        <div className="mt-2 flex flex-col gap-4 rounded-2xl border border-border bg-bg-soft p-4">
+          <div className="flex items-center gap-3">
+            <SportBadge
+              sport={{ ...newAppearance, name: cleanSportName(newName) || 'Vorschau' }}
+              size="md"
+            />
+            <div className="min-w-0">
+              <p className="text-xs text-muted-2">Vorschau</p>
+              <p className="truncate font-semibold text-ink">{cleanSportName(newName) || 'Neue Sportart'}</p>
+            </div>
+          </div>
+          <SportAppearancePicker idPrefix="new-sport" value={newAppearance} onChange={setNewAppearance} />
+        </div>
       </form>
+
+      {/* C2: Dialog zum nachträglichen Ändern von Symbol und Farbe einer eigenen Sportart. */}
+      <Modal open={editing !== null} title="Sportart anpassen" onClose={() => setEditing(null)}>
+        {editing && (
+          <div className="flex flex-col gap-5">
+            <div className="flex items-center gap-3">
+              <SportBadge sport={{ ...editing.draft, name: editing.sport.name }} size="lg" />
+              <p className="truncate font-display text-lg font-bold text-ink">{editing.sport.name}</p>
+            </div>
+            <SportAppearancePicker
+              idPrefix="edit-sport"
+              value={editing.draft}
+              onChange={(draft) => setEditing({ ...editing, draft })}
+            />
+            <div className="flex gap-3">
+              <PrimaryButton variant="ghost" className="h-12 flex-1 border border-border" onClick={() => setEditing(null)}>
+                Abbrechen
+              </PrimaryButton>
+              <PrimaryButton className="h-12 flex-1" onClick={saveEditing}>
+                Speichern
+              </PrimaryButton>
+            </div>
+          </div>
+        )}
+      </Modal>
 
       <ConfirmDialog
         open={pendingDelete !== null}
@@ -149,15 +230,18 @@ export function SportPicker() {
 }
 
 // C1: Kompakter Auswahl-Chip; eigene Sportarten bekommen zusätzlich einen Lösch-Button.
+// C2: Emoji als SportBadge mit Sportfarbe; eigene Sportarten zusätzlich mit Bearbeiten-Button.
 function SportChip({
   sport,
   selected,
   onSelect,
+  onEdit,
   onDelete,
 }: {
   sport: Sport;
   selected: boolean;
   onSelect: () => void;
+  onEdit?: () => void;
   onDelete?: () => void;
 }) {
   return (
@@ -172,12 +256,23 @@ function SportChip({
         type="button"
         onClick={onSelect}
         aria-pressed={selected}
-        className={`inline-flex h-full items-center gap-1.5 ${onDelete ? 'pl-3.5 pr-1.5' : 'px-3.5'}`}
+        className={`inline-flex h-full items-center gap-2 ${onDelete ? 'pl-2 pr-1.5' : 'pl-2 pr-3.5'}`}
       >
-        <span aria-hidden="true">{sport.emoji}</span>
+        <SportBadge sport={sport} size="xs" />
         <span className="max-w-[12rem] truncate">{sport.name}</span>
         {selected && <Check size={14} aria-hidden="true" />}
       </button>
+      {onEdit && (
+        <button
+          type="button"
+          onClick={onEdit}
+          aria-label={`${sport.name} anpassen`}
+          title={`${sport.name} anpassen`}
+          className="inline-flex h-7 w-7 items-center justify-center rounded-xl opacity-70 transition hover:bg-black/20 hover:opacity-100"
+        >
+          <Pencil size={13} />
+        </button>
+      )}
       {onDelete && (
         <button
           type="button"

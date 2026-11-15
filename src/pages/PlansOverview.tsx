@@ -8,6 +8,8 @@ import { PlanCard } from '../components/PlanCard';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useSport } from '../context/SportContext';
+// C2: Einheitliches Sporticon mit farbiger Umrandung.
+import { SportBadge } from '../components/SportBadge';
 
 export function PlansOverview() {
   const { plans, exercises, deletePlan } = useAppData();
@@ -28,7 +30,10 @@ export function PlansOverview() {
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
         {/* C1: Emoji aus dem Sportart-Objekt. */}
-        <p className="text-sm text-muted-2">{sport.emoji} Willkommen zurück</p>
+        {/* C2: Sporticon als SportBadge statt reinem Emoji. */}
+        <p className="flex items-center gap-2 text-sm text-muted-2">
+          <SportBadge sport={sport} size="xs" /> Willkommen zurück
+        </p>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-display text-3xl font-extrabold text-ink">Trainingspläne</h1>
           <PrimaryButton icon={<Plus size={18} />} onClick={() => navigate('/plaene/neu')}>

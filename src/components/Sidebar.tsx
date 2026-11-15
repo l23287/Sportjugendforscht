@@ -2,6 +2,8 @@ import { NavLink } from 'react-router-dom';
 import { NAV_ITEMS } from '../lib/nav';
 import { useSport } from '../context/SportContext';
 import { TrainerProMark } from './Logo';
+// C2: Einheitliches Sporticon mit farbiger Umrandung.
+import { SportBadge } from './SportBadge';
 
 export function Sidebar() {
   const { sport } = useSport();
@@ -16,8 +18,10 @@ export function Sidebar() {
           <div className="min-w-0">
             <p className="font-display text-lg font-extrabold leading-none text-ink">TrainerPro</p>
             {/* C1: Emoji und Name aus dem Sportart-Objekt. */}
-            <p className="mt-1.5 truncate text-xs text-muted-2">
-              {sport.emoji} {sport.name}
+            {/* C2: Am Desktop reicht laut Abstimmung die farbliche Umrandung hier in der Sidebar (kein Icon oben rechts). */}
+            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-2">
+              <SportBadge sport={sport} size="xs" />
+              <span className="truncate">{sport.name}</span>
             </p>
           </div>
         </div>

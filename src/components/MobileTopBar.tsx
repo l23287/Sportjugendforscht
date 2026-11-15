@@ -1,5 +1,7 @@
 import { useSport } from '../context/SportContext';
 import { TrainerProMark } from './Logo';
+// C2: Einheitliches Sporticon mit farbiger Umrandung.
+import { SportBadge } from './SportBadge';
 
 export function MobileTopBar() {
   const { sport } = useSport();
@@ -10,9 +12,10 @@ export function MobileTopBar() {
         <TrainerProMark mono className="h-5 w-auto" />
       </div>
       <p className="font-display text-base font-extrabold leading-none text-ink">TrainerPro</p>
-      <div className="ml-auto flex items-center gap-1.5 rounded-2xl border border-border bg-surface px-3 py-1.5 text-xs text-muted">
+      <div className="ml-auto flex items-center gap-2 rounded-2xl border border-border bg-surface py-1 pl-1 pr-3 text-xs text-muted">
         {/* C1: Sportart ist jetzt ein Objekt – Emoji und Name kommen direkt daraus. */}
-        <span>{sport.emoji}</span>
+        {/* C2: Sporticon oben rechts mit Umrandung in der Farbe der Sportart. */}
+        <SportBadge sport={sport} size="xs" />
         <span className="max-w-[7rem] truncate">{sport.name}</span>
       </div>
     </header>
