@@ -1,7 +1,7 @@
 # C2a – Sporticon am Desktop oben rechts
 
 **Phase:** Flowstate A · **Branch:** `phase-1` · **Datum:** 15.11.2026 · **Status:** ✅ umgesetzt
-**Bezug:** Nachbesserung zu [C2](C2.md)
+**Bezug:** Nachbesserung zu [C2](C2.md) · Umrandung der Anzeige geändert in [C2b](C2b.md)
 
 ## Anforderung
 

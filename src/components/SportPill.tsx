@@ -2,21 +2,35 @@
 // Wird von der Handy-Kopfzeile (MobileTopBar) und der Desktop-Kopfzeile (AppShell) gemeinsam genutzt,
 // damit das Sporticon auf allen Geräten an derselben Stelle und gleich aussieht.
 // Ein Klick führt zu den Einstellungen, wo die Sportart gewechselt wird.
+// C2b: Die farbige Umrandung liegt jetzt um die GESAMTE Anzeige (Symbol + Name) statt nur um das kleine Emoji-Kästchen.
+import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useSport } from '../context/SportContext';
-import { SportBadge } from './SportBadge';
 
 export function SportPill({ className = '' }: { className?: string }) {
   const { sport } = useSport();
+
+  // C2b: Rahmen in voller Sportfarbe (Kontrast ≥ 3:1, siehe C2), Hintergrund leicht getönt (Hex-Alpha 1f ≈ 12 %).
+  // Per style statt dynamischer Tailwind-Klasse – Tailwind generiert keine Klassen aus Laufzeitwerten.
+  const style = {
+    '--sport-color': sport.color,
+    borderColor: 'var(--sport-color)',
+    backgroundColor: `${sport.color}1f`,
+  } as CSSProperties;
 
   return (
     <Link
       to="/einstellungen"
       title="Sportart wechseln"
       aria-label={`Aktuelle Sportart: ${sport.name} – Sportart wechseln`}
-      className={`flex items-center gap-2 rounded-2xl border border-border bg-surface py-1 pl-1 pr-3 text-xs text-muted transition hover:text-ink md:text-sm ${className}`}
+      style={style}
+      // C2b: border-2 statt border/border-border, damit die Sportfarbe deutlich sichtbar ist.
+      className={`flex h-9 items-center gap-2 rounded-2xl border-2 px-3 text-xs font-medium text-ink transition hover:brightness-125 md:text-sm ${className}`}
     >
-      <SportBadge sport={sport} size="xs" />
+      {/* C2b: Emoji ohne eigenes Kästchen – die Umrandung trägt jetzt die ganze Anzeige. */}
+      <span className="text-base leading-none" aria-hidden="true">
+        {sport.emoji}
+      </span>
       <span className="max-w-[7rem] truncate md:max-w-[12rem]">{sport.name}</span>
     </Link>
   );
