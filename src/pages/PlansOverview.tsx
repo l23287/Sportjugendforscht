@@ -47,10 +47,11 @@ export function PlansOverview() {
       {filteredPlans.length === 0 ? (
         <EmptyState
           icon={<ClipboardList size={28} />}
-          title={plans.length === 0 ? 'Noch keine Trainingspläne' : 'Keine Treffer'}
+          // C5: Sportart im leeren Zustand nennen – nach einem Wechsel wirkt die leere Liste sonst wie Datenverlust.
+          title={plans.length === 0 ? `Noch keine Trainingspläne für ${sport.name}` : 'Keine Treffer'}
           description={
             plans.length === 0
-              ? 'Erstelle deinen ersten Trainingsplan und stelle Übungen aus deinem Pool zusammen.'
+              ? `Erstelle deinen ersten ${sport.name}-Trainingsplan. Pläne anderer Sportarten findest du, wenn du oben rechts die Sportart wechselst.`
               : 'Für deine Suche wurden keine Pläne gefunden.'
           }
           action={

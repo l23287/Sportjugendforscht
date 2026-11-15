@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+// C5: Navigate für die Weiterleitung bei Plänen einer anderen Sportart.
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Calendar, ChevronLeft, Clock, Dumbbell, Pencil, Play, Trash2, Users } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { IconButton } from '../components/IconButton';
@@ -14,11 +15,16 @@ import type { Exercise } from '../types';
 export function PlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPlan, exercises, deletePlan } = useAppData();
+  const { getPlan, getPlanSportId, exercises, deletePlan } = useAppData();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
 
   const plan = id ? getPlan(id) : undefined;
+
+  // C5: Gehört der Plan zu einer anderen Sportart (z. B. Lesezeichen, Zurück-Button nach Sportwechsel),
+  // geht es zur Übersicht der aktiven Sportart – der Plan wird nicht angezeigt.
+  // Existiert er gar nicht, bleibt der bisherige Hinweis „Plan nicht gefunden“.
+  if (!plan && id && getPlanSportId(id)) return <Navigate to="/plaene" replace />;
 
   if (!plan) {
     return (

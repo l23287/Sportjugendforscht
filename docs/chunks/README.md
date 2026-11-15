@@ -20,4 +20,6 @@ Jede Weiterentwicklung von TrainerPro ist in **Chunks** eingeteilt. Für jeden C
 | C2c | Nachbesserung: Umrandung des ganzen Elements auch im Sportart-Auswahlbereich (Einstellungen) | ✅ umgesetzt | 15.11.2026 | [C2c.md](C2c.md) |
 | C3 | Aufschlagtraining nur noch für Tischtennis (als Reiter im Übungsbereich) | ✅ umgesetzt | 15.11.2026 | [C3.md](C3.md) |
 | C4 | Sekundengenaue Übungsdauer (Uhrform, max. 3 Std.) | ✅ umgesetzt | 15.11.2026 | [C4.md](C4.md) |
-| C5 | Übungen und Pläne je Sportart getrennt speichern/anzeigen | ⏳ offen | – | – |
+| C5 | Übungen und Pläne je Sportart getrennt speichern/anzeigen | ✅ umgesetzt | 15.11.2026 | [C5.md](C5.md) |
+
+**Flowstate A ist abgeschlossen.** Alle fünf Chunks (plus die Nachbesserungen C2a–C2c) sind auf `phase-1` umgesetzt.

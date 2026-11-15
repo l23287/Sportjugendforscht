@@ -7,6 +7,8 @@
 import { useMemo, useState, type FormEvent } from 'react';
 import { Check, Pencil, Plus, X } from 'lucide-react';
 import { useSport } from '../context/SportContext';
+// C5: Pläne/Übungen einer eigenen Sportart werden beim Löschen mit entfernt.
+import { useAppData } from '../context/AppDataContext';
 import { SearchInput } from './SearchInput';
 import { PrimaryButton } from './PrimaryButton';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -27,6 +29,7 @@ import { SPORT_CATEGORIES, type Sport } from '../types';
 
 export function SportPicker() {
   const { sport: activeSport, sports, setSport, addCustomSport, updateCustomSport, removeCustomSport } = useSport();
+  const { countSportData, deleteSportData } = useAppData();
   const [query, setQuery] = useState('');
   const [newName, setNewName] = useState('');
   const [error, setError] = useState('');
@@ -83,7 +86,12 @@ export function SportPicker() {
   }
 
   function confirmDelete() {
-    if (pendingDelete) removeCustomSport(pendingDelete.id);
+    // C5: Erst die Daten der Sportart löschen, dann die Sportart selbst – so bleiben keine unsichtbaren,
+    // verwaisten Pläne/Übungen im Speicher zurück (eine neu angelegte Sportart bekäme ohnehin eine neue ID).
+    if (pendingDelete) {
+      deleteSportData(pendingDelete.id);
+      removeCustomSport(pendingDelete.id);
+    }
     setPendingDelete(null);
   }
 
@@ -224,18 +232,26 @@ export function SportPicker() {
       <ConfirmDialog
         open={pendingDelete !== null}
         title="Sportart löschen?"
-        description={
-          pendingDelete
-            ? `„${pendingDelete.name}“ wird aus deiner Liste entfernt.${
-                pendingDelete.id === activeSport.id ? ' Da sie gerade aktiv ist, wird Tischtennis ausgewählt.' : ''
-              }`
-            : undefined
-        }
+        // C5: Dialog nennt, wie viele Pläne/Übungen mitgelöscht werden.
+        description={pendingDelete ? deleteDescription(pendingDelete, activeSport.id, countSportData(pendingDelete.id)) : undefined}
         onConfirm={confirmDelete}
         onCancel={() => setPendingDelete(null)}
       />
     </div>
   );
+}
+
+// C5: Text für den Löschdialog, z. B. „„Floorball“ und 3 Pläne und 12 Übungen werden gelöscht.“
+function deleteDescription(sport: Sport, activeSportId: string, counts: { plans: number; exercises: number }): string {
+  const parts: string[] = [];
+  if (counts.plans > 0) parts.push(`${counts.plans} ${counts.plans === 1 ? 'Plan' : 'Pläne'}`);
+  if (counts.exercises > 0) parts.push(`${counts.exercises} ${counts.exercises === 1 ? 'Übung' : 'Übungen'}`);
+  const main =
+    parts.length > 0
+      ? `„${sport.name}“ und ${parts.join(' und ')} werden unwiderruflich gelöscht.`
+      : `„${sport.name}“ wird aus deiner Liste entfernt.`;
+  const fallback = sport.id === activeSportId ? ' Da sie gerade aktiv ist, wird Tischtennis ausgewählt.' : '';
+  return main + fallback;
 }
 
 // C1: Kompakter Auswahl-Chip; eigene Sportarten bekommen zusätzlich einen Lösch-Button.

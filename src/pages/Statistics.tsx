@@ -40,8 +40,10 @@ export function Statistics() {
 
   return (
     <div className="flex flex-col gap-6 pb-10">
-      <header>
+      {/* C5: Hinweis, dass die Zahlen nur für die aktive Sportart gelten (gleicher Stil wie die Unterzeile in den Einstellungen). */}
+      <header className="flex flex-col gap-1">
         <h1 className="font-display text-3xl font-extrabold text-ink">Statistiken</h1>
+        <p className="text-sm text-muted">Auswertung für {sport.name}</p>
       </header>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -70,7 +72,8 @@ export function Statistics() {
           <EmptyState
             icon={<BarChart3 size={28} />}
             title="Noch keine Daten"
-            description="Sobald Übungen in Trainingsplänen verwendet werden, siehst du hier die Verteilung."
+            // C5: Statistiken gelten nur für die aktive Sportart.
+            description={`Sobald ${sport.name}-Übungen in Trainingsplänen verwendet werden, siehst du hier die Verteilung.`}
           />
         ) : (
           <DonutChart data={usageData} totalLabel="Einsätze" />

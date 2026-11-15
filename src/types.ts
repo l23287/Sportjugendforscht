@@ -51,10 +51,14 @@ export interface Exercise {
    *  damit beim Aufsummieren keine Rundungsfehler entstehen. Maximum: MAX_DURATION_SECONDS (3 Std.). */
   durationSeconds: number;
   difficulty: Difficulty;
+  /** C5: Sportart, zu der die Übung gehört (stabile ID aus C1). Wird beim Anlegen automatisch gesetzt. */
+  sportId: SportId;
   createdAt: string;
 }
 
-export type ExerciseInput = Omit<Exercise, 'id' | 'createdAt'>;
+// C5: `sportId` ist nicht Teil der Formulareingabe – sie wird beim Anlegen aus der aktiven Sportart gesetzt
+// und beim Bearbeiten nie verändert.
+export type ExerciseInput = Omit<Exercise, 'id' | 'createdAt' | 'sportId'>;
 
 export interface TrainingPlan {
   id: string;
@@ -63,10 +67,13 @@ export interface TrainingPlan {
   targetGroup: string;
   date: string | null;
   exerciseIds: string[];
+  /** C5: Sportart, zu der der Plan gehört (stabile ID aus C1). Wird beim Anlegen automatisch gesetzt. */
+  sportId: SportId;
   createdAt: string;
 }
 
-export type PlanInput = Omit<TrainingPlan, 'id' | 'createdAt'>;
+// C5: `sportId` ist nicht Teil der Formulareingabe (siehe ExerciseInput).
+export type PlanInput = Omit<TrainingPlan, 'id' | 'createdAt' | 'sportId'>;
 
 export type ServeLength = 'Kurz' | 'Halblang' | 'Lang';
 

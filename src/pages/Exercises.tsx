@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Dumbbell, Plus } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
+// C5: Sportname für den leeren Zustand.
+import { useSport } from '../context/SportContext';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { SearchInput } from '../components/SearchInput';
 import { EmptyState } from '../components/EmptyState';
@@ -11,6 +13,7 @@ import type { Exercise, ExerciseInput } from '../types';
 
 export function Exercises() {
   const { exercises, addExercise, updateExercise, deleteExercise } = useAppData();
+  const { sport } = useSport();
   const [query, setQuery] = useState('');
   const [modalExercise, setModalExercise] = useState<Exercise | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
@@ -57,10 +60,11 @@ export function Exercises() {
       {filteredExercises.length === 0 ? (
         <EmptyState
           icon={<Dumbbell size={28} />}
-          title={exercises.length === 0 ? 'Noch keine Übungen' : 'Keine Treffer'}
+          // C5: Sportart im leeren Zustand nennen (Übungen sind je Sportart getrennt).
+          title={exercises.length === 0 ? `Noch keine Übungen für ${sport.name}` : 'Keine Treffer'}
           description={
             exercises.length === 0
-              ? 'Lege deine erste Übung an und baue dir eine eigene Übungsdatenbank auf.'
+              ? `Lege deine erste ${sport.name}-Übung an und baue dir eine eigene Übungsdatenbank auf.`
               : 'Für deine Suche wurden keine Übungen gefunden.'
           }
           action={

@@ -108,6 +108,8 @@ export function SportProvider({ children }: { children: ReactNode }) {
       },
       // C1: Entfernt eine eigene Sportart. Ist sie aktiv, greift automatisch der Fallback auf die Standard-Sportart.
       // Hinweis für C5: Sobald Pläne/Übungen einer Sportart zugeordnet sind, muss hier über deren Verbleib entschieden werden.
+      // C5: Entschieden – die Daten werden mitgelöscht (nach Warnung mit Anzahl). Das übernimmt der SportPicker über
+      // deleteSportData() aus AppDataContext, weil SportProvider außerhalb von AppDataProvider liegt.
       removeCustomSport: (id) => {
         setCustomSports((prev) => prev.filter((s) => s.id !== id));
         if (id === sport.id) setSportId(DEFAULT_SPORT_ID);

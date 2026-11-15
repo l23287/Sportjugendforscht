@@ -20,6 +20,7 @@ bis zur Trainingsdurchführung mit Timer.
 
 Die Weiterentwicklung ist in Chunks dokumentiert, siehe [`docs/chunks/`](docs/chunks/README.md).
 
+Pläne und Übungen werden je Sportart getrennt gespeichert und angezeigt (C5).
 Die Daten werden lokal im Browser (`localStorage`) gespeichert.
 
 ## Entwicklung

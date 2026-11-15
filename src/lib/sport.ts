@@ -162,3 +162,12 @@ export const SERVE_TRAINING_SPORT_ID: SportId = 'tischtennis';
 export function hasServeTraining(sport: Pick<Sport, 'id'>): boolean {
   return sport.id === SERVE_TRAINING_SPORT_ID;
 }
+
+// C5: Bestehende Pläne/Übungen aus der Zeit vor C5 haben keine Sportart. Sie werden Tischtennis zugeordnet,
+// weil TrainerPro bis C1 eine reine Tischtennis-App war (Abstimmung im Team).
+export const LEGACY_DATA_SPORT_ID: SportId = 'tischtennis';
+
+// C5: Liefert eine gültige Sportart-ID für gespeicherte Einträge (fehlend/ungültig → Tischtennis).
+export function migrateSportId(value: unknown): SportId {
+  return typeof value === 'string' && value.trim() !== '' ? value : LEGACY_DATA_SPORT_ID;
+}

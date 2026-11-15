@@ -1,5 +1,6 @@
 import { useMemo, useState, type FormEvent } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+// C5: Navigate für den Schutz beim Bearbeiten von Plänen einer anderen Sportart.
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { ArrowDown, ArrowUp, Check, ChevronLeft, Plus, X } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -10,7 +11,20 @@ import { inputClass, labelClass, textareaClass } from '../lib/formStyles';
 import { formatDuration } from '../lib/time';
 import type { Exercise, PlanInput } from '../types';
 
+// C5: Schutz vor dem Formular. Wird `/plaene/<id>/bearbeiten` mit einem Plan aufgerufen, der nicht zur aktiven
+// Sportart gehört (oder nicht existiert), geht es zur Übersicht. Vorher wäre stattdessen ein leeres
+// „Neuen Plan erstellen“-Formular erschienen, das beim Speichern einen NEUEN Plan angelegt hätte.
 export function PlanForm() {
+  const { id } = useParams<{ id: string }>();
+  const { getPlan } = useAppData();
+  if (id && !getPlan(id)) return <Navigate to="/plaene" replace />;
+  // C5: `key` erzwingt ein neues Formular je Plan. Ohne key verwendet React dieselbe Instanz weiter, wenn man
+  // direkt von /plaene/neu zu /plaene/<id>/bearbeiten wechselt – die leeren Felder des neuen Plans hätten dann
+  // beim Speichern Zielgruppe und Übungen des bestehenden Plans überschrieben (im C5-Test entdeckt).
+  return <PlanFormContent key={id ?? 'neu'} />;
+}
+
+function PlanFormContent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { exercises, plans, addPlan, updatePlan } = useAppData();
