@@ -49,7 +49,8 @@ export function TrainerProLockup({ tagline = true }: { tagline?: boolean }) {
         </span>
         {tagline && (
           <span className="text-[10px] tracking-[0.26em] text-[#a1b1d1]">
-            {sport.toUpperCase()} · TRAINING
+            {/* C1: Name aus dem Sportart-Objekt. */}
+            {sport.name.toUpperCase()} · TRAINING
           </span>
         )}
       </span>

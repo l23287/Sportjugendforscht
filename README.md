@@ -12,6 +12,10 @@ bis zur Trainingsdurchführung mit Timer.
   mit Übungsauswahl aus dem Pool inkl. Reihenfolge per ↑/↓, Detailansicht mit Start-Timer pro Übung.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
+- **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
+  die in den Einstellungen hinzugefügt und gelöscht werden können (C1).
+
+Die Weiterentwicklung ist in Chunks dokumentiert, siehe [`docs/chunks/`](docs/chunks/README.md).
 
 Die Daten werden lokal im Browser (`localStorage`) gespeichert.
 

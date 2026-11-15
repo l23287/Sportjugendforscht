@@ -2,9 +2,43 @@ export type Difficulty = 'Anfänger' | 'Fortgeschritten';
 
 export const DIFFICULTIES: Difficulty[] = ['Anfänger', 'Fortgeschritten'];
 
-export type Sport = 'Tischtennis' | 'Beach Volleyball';
+// C1: Die Sportart ist kein fester Union-Typ mehr ('Tischtennis' | 'Beach Volleyball'),
+// sondern ein Objekt mit stabiler ID. So können Nutzer:innen eigene Sportarten anlegen,
+// und spätere Chunks können Daten über die ID zuordnen (C5: Pläne/Übungen je Sportart),
+// ohne dass ein Umbenennen Zuordnungen zerstört. Symbol/Farbe folgen in C2.
+export type SportId = string;
 
-export const SPORTS: Sport[] = ['Tischtennis', 'Beach Volleyball'];
+// C1: Kategorien zur Gruppierung der Vorauswahl in den Einstellungen.
+export type SportCategory =
+  | 'Ballsport'
+  | 'Rückschlagsport'
+  | 'Turnen & Tanz'
+  | 'Kampfsport'
+  | 'Ausdauer'
+  | 'Wassersport'
+  | 'Outdoor & Präzision'
+  | 'Eigene';
+
+export const SPORT_CATEGORIES: SportCategory[] = [
+  'Ballsport',
+  'Rückschlagsport',
+  'Turnen & Tanz',
+  'Kampfsport',
+  'Ausdauer',
+  'Wassersport',
+  'Outdoor & Präzision',
+  'Eigene',
+];
+
+// C1: Definition einer Sportart (vorgegeben oder eigen).
+export interface Sport {
+  id: SportId;
+  name: string;
+  emoji: string;
+  category: SportCategory;
+  /** C1: true = von Nutzer:in angelegt (löschbar), false = Teil der Vorauswahl. */
+  custom: boolean;
+}
 
 export interface Exercise {
   id: string;

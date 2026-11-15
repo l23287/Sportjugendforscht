@@ -1,6 +1,5 @@
 import { NavLink } from 'react-router-dom';
 import { NAV_ITEMS } from '../lib/nav';
-import { SPORT_EMOJI } from '../lib/sport';
 import { useSport } from '../context/SportContext';
 import { TrainerProMark } from './Logo';
 
@@ -16,8 +15,9 @@ export function Sidebar() {
           </div>
           <div className="min-w-0">
             <p className="font-display text-lg font-extrabold leading-none text-ink">TrainerPro</p>
+            {/* C1: Emoji und Name aus dem Sportart-Objekt. */}
             <p className="mt-1.5 truncate text-xs text-muted-2">
-              {SPORT_EMOJI[sport]} {sport}
+              {sport.emoji} {sport.name}
             </p>
           </div>
         </div>

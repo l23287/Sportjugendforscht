@@ -7,7 +7,6 @@ import { EmptyState } from '../components/EmptyState';
 import { computeAverageDuration, computeExerciseUsage } from '../lib/stats';
 import { CATEGORICAL_PALETTE_DARK, CHART_OTHER_COLOR } from '../lib/chartPalette';
 import { formatDuration } from '../lib/time';
-import { SPORT_EMOJI } from '../lib/sport';
 import { useSport } from '../context/SportContext';
 
 const MAX_NAMED_SLICES = 5;
@@ -52,9 +51,10 @@ export function Statistics() {
           value={plans.length === 0 ? '–' : formatDuration(averageDuration)}
         />
         <StatTile
-          icon={<span className="text-lg leading-none">{SPORT_EMOJI[sport]}</span>}
+          // C1: Emoji und Name aus dem Sportart-Objekt.
+          icon={<span className="text-lg leading-none">{sport.emoji}</span>}
           label="Sportart"
-          value={sport}
+          value={sport.name}
         />
       </div>
 

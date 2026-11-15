@@ -1,4 +1,3 @@
-import { SPORT_EMOJI } from '../lib/sport';
 import { useSport } from '../context/SportContext';
 import { TrainerProMark } from './Logo';
 
@@ -12,8 +11,9 @@ export function MobileTopBar() {
       </div>
       <p className="font-display text-base font-extrabold leading-none text-ink">TrainerPro</p>
       <div className="ml-auto flex items-center gap-1.5 rounded-2xl border border-border bg-surface px-3 py-1.5 text-xs text-muted">
-        <span>{SPORT_EMOJI[sport]}</span>
-        <span className="max-w-[7rem] truncate">{sport}</span>
+        {/* C1: Sportart ist jetzt ein Objekt – Emoji und Name kommen direkt daraus. */}
+        <span>{sport.emoji}</span>
+        <span className="max-w-[7rem] truncate">{sport.name}</span>
       </div>
     </header>
   );

@@ -1,12 +1,10 @@
 import { useState } from 'react';
-import { useSport } from '../context/SportContext';
-import { PillSelect } from '../components/PillSelect';
+// C1: SportPicker ersetzt die PillSelect-Auswahl (25 Sportarten + eigene).
+import { SportPicker } from '../components/SportPicker';
 import { ImpressumDialog } from '../components/ImpressumDialog';
 import { DatenschutzDialog } from '../components/DatenschutzDialog';
-import { SPORTS } from '../types';
 
 export function Settings() {
-  const { sport, setSport } = useSport();
   const [impressumOpen, setImpressumOpen] = useState(false);
   const [datenschutzOpen, setDatenschutzOpen] = useState(false);
 
@@ -19,7 +17,8 @@ export function Settings() {
 
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <h2 className="font-display text-lg font-bold text-ink">Sportart</h2>
-        <PillSelect label="Aktuelle Sportart" options={SPORTS} value={sport} onChange={setSport} />
+        {/* C1: Auswahl aus 25 Sportarten plus eigene Sportarten hinzufügen/löschen. */}
+        <SportPicker />
       </div>
 
       <div className="flex items-center gap-3 text-sm font-medium text-muted">
