@@ -11,6 +11,7 @@ bis zur Trainingsdurchführung mit Timer.
 - **Trainingspläne** – Pläne als Kacheln, Suche, überfällige Pläne werden rot markiert, Anlegen/Bearbeiten
   mit Übungsauswahl aus dem Pool inkl. Reihenfolge per ↑/↓, Detailansicht mit Start-Timer pro Übung.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
+  Bei Tischtennis zusätzlich der Reiter **Aufschlagtraining** (Live-Tracking gut/schlecht mit Verlaufsdiagramm, C3).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
   die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes

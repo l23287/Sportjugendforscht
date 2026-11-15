@@ -154,3 +154,11 @@ export function legacySportNameToId(name: unknown): SportId {
   const normalized = normalizeSportName(name);
   return PRESET_SPORTS.find((sport) => normalizeSportName(sport.name) === normalized)?.id ?? DEFAULT_SPORT_ID;
 }
+
+// C3: Das Aufschlagtraining gibt es nur für Tischtennis. Geprüft wird über die stabile ID (nicht den Namen);
+// seit C1 kann keine eigene Sportart „Tischtennis“ angelegt werden (Duplikatprüfung), die Prüfung ist eindeutig.
+export const SERVE_TRAINING_SPORT_ID: SportId = 'tischtennis';
+
+export function hasServeTraining(sport: Pick<Sport, 'id'>): boolean {
+  return sport.id === SERVE_TRAINING_SPORT_ID;
+}

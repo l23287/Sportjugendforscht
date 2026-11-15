@@ -1,3 +1,5 @@
+// C3: Wird jetzt als Reiter im Übungsbereich angezeigt (/uebungen/aufschlagtraining) und nur bei Tischtennis
+// (Schutz über ServeTrainingGuard). Inhalt und Ablauf der Phasen sind unverändert.
 import { useMemo, useState } from 'react';
 import { Crosshair, Flag, Play, Ruler, Tag, ThumbsDown, ThumbsUp, X } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
@@ -119,7 +121,8 @@ export function ServeTraining() {
   return (
     <div className="flex flex-col gap-6 pb-10">
       <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-3xl font-extrabold text-ink">Aufschlagtraining</h1>
+        {/* C3: h2 statt h1 – die Seitenüberschrift „Übungen“ kommt aus ExercisesLayout. */}
+        <h2 className="font-display text-2xl font-extrabold text-ink">Aufschlagtraining</h2>
         <PrimaryButton icon={<Play size={18} />} onClick={openGoalPhase}>
           Session starten
         </PrimaryButton>
@@ -192,7 +195,8 @@ function GoalPhase({
   return (
     <div className="flex flex-col gap-6 pb-10">
       <header>
-        <h1 className="font-display text-3xl font-extrabold text-ink">Ziel festlegen</h1>
+        {/* C3: h2 statt h1 – die Seitenüberschrift „Übungen“ kommt aus ExercisesLayout. */}
+        <h2 className="font-display text-2xl font-extrabold text-ink">Ziel festlegen</h2>
         <p className="mt-1 text-sm text-muted">
           Was nimmst du dir für diese Session vor? Länge und Platzierung geben dir eine klare Zielvision.
         </p>
@@ -255,7 +259,8 @@ function ActivePhase({
       <header className="flex items-start justify-between gap-4">
         <div>
           <p className="text-sm font-medium text-muted-2">Aktive Session</p>
-          <h1 className="font-display text-3xl font-extrabold text-ink">Aufschlagtraining</h1>
+          {/* C3: h2 statt h1 – die Seitenüberschrift „Übungen“ kommt aus ExercisesLayout. */}
+          <h2 className="font-display text-2xl font-extrabold text-ink">Aufschlagtraining</h2>
         </div>
         <IconButton icon={<X size={16} />} label="Session verwerfen" onClick={onDiscard} />
       </header>
@@ -345,7 +350,8 @@ function ResultsPhase({ session, onDone, onRestart }: ResultsPhaseProps) {
     <div className="flex flex-col gap-6 pb-10">
       <header>
         <p className="text-sm font-medium text-muted-2">Session-Ergebnis</p>
-        <h1 className="font-display text-3xl font-extrabold text-ink">Aufschlagtraining</h1>
+        {/* C3: h2 statt h1 – die Seitenüberschrift „Übungen“ kommt aus ExercisesLayout. */}
+        <h2 className="font-display text-2xl font-extrabold text-ink">Aufschlagtraining</h2>
       </header>
 
       <div className="flex flex-wrap items-center gap-3 rounded-3xl border border-border bg-surface p-5">

@@ -45,14 +45,14 @@ export function Exercises() {
 
   return (
     <div className="flex flex-col gap-6">
-      <header className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="font-display text-3xl font-extrabold text-ink">Übungen</h1>
-        <PrimaryButton icon={<Plus size={18} />} onClick={openCreateModal}>
+      {/* C3: Die Überschrift „Übungen“ kommt jetzt aus ExercisesLayout (über den Reitern).
+          Suche und „Neue Übung“ stehen dafür gemeinsam in einer Werkzeugzeile. */}
+      <div className="flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <SearchInput value={query} onChange={setQuery} placeholder="Übungen durchsuchen…" className="w-full sm:max-w-md" />
+        <PrimaryButton icon={<Plus size={18} />} onClick={openCreateModal} className="shrink-0">
           Neue Übung
         </PrimaryButton>
-      </header>
-
-      <SearchInput value={query} onChange={setQuery} placeholder="Übungen durchsuchen…" className="max-w-md" />
+      </div>
 
       {filteredExercises.length === 0 ? (
         <EmptyState
