@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Pause, Play, RotateCcw, X } from 'lucide-react';
-import { formatCountdown } from '../lib/time';
+// C4: formatDuration für die Gesamtdauer in Uhrform.
+import { formatCountdown, formatDuration } from '../lib/time';
 import type { Exercise } from '../types';
 
 interface TimerProps {
@@ -9,7 +10,8 @@ interface TimerProps {
 }
 
 export function Timer({ exercise, onClose }: TimerProps) {
-  const totalSeconds = exercise.durationMinutes * 60;
+  // C4: Dauer liegt bereits sekundengenau vor (vorher Minuten × 60).
+  const totalSeconds = exercise.durationSeconds;
   const [remaining, setRemaining] = useState(totalSeconds);
   const [running, setRunning] = useState(true);
 
@@ -99,7 +101,7 @@ export function Timer({ exercise, onClose }: TimerProps) {
         {isDone ? (
           <p className="mb-6 font-semibold text-accent">Übung abgeschlossen! 🎉</p>
         ) : (
-          <p className="mb-6 text-sm text-muted">Gesamtdauer: {exercise.durationMinutes} Min.</p>
+          <p className="mb-6 text-sm text-muted">Gesamtdauer: {formatDuration(exercise.durationSeconds) /* C4 */}</p>
         )}
 
         <div className="flex gap-3">

@@ -50,6 +50,7 @@ export function Statistics() {
         <StatTile
           icon={<Clock size={20} />}
           label="Ø Trainingsdauer"
+          // C4: averageDuration ist jetzt in Sekunden.
           value={plans.length === 0 ? '–' : formatDuration(averageDuration)}
         />
         <StatTile

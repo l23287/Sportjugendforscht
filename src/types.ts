@@ -47,7 +47,9 @@ export interface Exercise {
   name: string;
   description: string;
   goal: string;
-  durationMinutes: number;
+  /** C4: Dauer in ganzen Sekunden (vorher `durationMinutes` in ganzen Minuten). Ganze Zahl statt Kommaminuten,
+   *  damit beim Aufsummieren keine Rundungsfehler entstehen. Maximum: MAX_DURATION_SECONDS (3 Std.). */
+  durationSeconds: number;
   difficulty: Difficulty;
   createdAt: string;
 }

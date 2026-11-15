@@ -34,7 +34,8 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
           </span>
         )}
         <span className="inline-flex items-center gap-1">
-          <Clock size={13} /> {formatDuration(exercise.durationMinutes)}
+          {/* C4: Dauer sekundengenau in Uhrform. */}
+          <Clock size={13} /> {formatDuration(exercise.durationSeconds)}
         </span>
       </div>
 

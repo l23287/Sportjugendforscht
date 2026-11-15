@@ -3,6 +3,8 @@ import { Check } from 'lucide-react';
 import { Modal } from './Modal';
 import { PrimaryButton } from './PrimaryButton';
 import { inputClass, labelClass, selectClass, textareaClass } from '../lib/formStyles';
+// C4: Sekundengenaue Dauer – Standardwert, Prüfung und Formatierung.
+import { DEFAULT_DURATION_SECONDS, parseDurationInput, splitSeconds } from '../lib/time';
 import { DIFFICULTIES } from '../types';
 import type { Difficulty, Exercise, ExerciseInput } from '../types';
 
@@ -17,7 +19,9 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [goal, setGoal] = useState('');
-  const [durationMinutes, setDurationMinutes] = useState(15);
+  // C4: Zwei Felder (Min. / Sek.) statt einem Minutenfeld. Als Text gespeichert, damit ein Feld auch leer sein darf.
+  const [durationMin, setDurationMin] = useState('15');
+  const [durationSec, setDurationSec] = useState('00');
   const [difficulty, setDifficulty] = useState<Difficulty>('Anfänger');
   const [error, setError] = useState('');
 
@@ -26,7 +30,10 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
     setName(exercise?.name ?? '');
     setDescription(exercise?.description ?? '');
     setGoal(exercise?.goal ?? '');
-    setDurationMinutes(exercise?.durationMinutes ?? 15);
+    // C4: Beim Bearbeiten aus den gespeicherten Sekunden befüllen (z. B. 90 s → 1 Min. 30 Sek.).
+    const { hours, minutes, seconds } = splitSeconds(exercise?.durationSeconds ?? DEFAULT_DURATION_SECONDS);
+    setDurationMin(String(hours * 60 + minutes));
+    setDurationSec(String(seconds).padStart(2, '0'));
     setDifficulty(exercise?.difficulty ?? 'Anfänger');
     setError('');
   }, [open, exercise]);
@@ -37,22 +44,26 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
       setError('Bitte gib einen Namen für die Übung ein.');
       return;
     }
-    if (!Number.isFinite(durationMinutes) || durationMinutes <= 0) {
-      setError('Die Dauer muss größer als 0 Minuten sein.');
+    // C4: Prüfung von Minuten/Sekunden (ganze Zahlen, Sek. 0–59, > 0, max. 3 Std.).
+    const duration = parseDurationInput(durationMin, durationSec);
+    if (!duration.ok) {
+      setError(duration.error);
       return;
     }
     onSubmit({
       name: name.trim(),
       description: description.trim(),
       goal: goal.trim(),
-      durationMinutes,
+      durationSeconds: duration.seconds,
       difficulty,
     });
   }
 
   return (
     <Modal open={open} title={exercise ? 'Übung bearbeiten' : 'Neue Übung'} onClose={onClose}>
-      <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+      {/* C4: noValidate – sonst blockiert die Browser-Prüfung (pattern) das Absenden mit einer eigenen Sprechblase
+          und unsere einheitlich gestaltete Fehlermeldung erscheint nicht. Geprüft wird in parseDurationInput. */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-4" noValidate>
         <div>
           <label className={labelClass} htmlFor="exercise-name">
             Name
@@ -90,20 +101,55 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
             placeholder="z. B. Schlagpräzision"
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label className={labelClass} htmlFor="exercise-duration">
-              Dauer (Minuten)
-            </label>
-            <input
-              id="exercise-duration"
-              type="number"
-              min={1}
-              className={inputClass}
-              value={durationMinutes}
-              onChange={(event) => setDurationMinutes(Number(event.target.value))}
-            />
-          </div>
+        {/* C4: Am Handy untereinander (Dauer braucht zwei Felder), ab sm wie bisher nebeneinander. */}
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {/* C4: Dauer als zwei Felder „Min.“ und „Sek.“ – Zahlentastatur am Handy (inputMode="numeric").
+              Eingaben werden bewusst NICHT still bereinigt: „1,5“ würde sonst unbemerkt zu „15“ Minuten.
+              Ungültige Zeichen meldet stattdessen parseDurationInput beim Speichern. */}
+          <fieldset>
+            <legend className={labelClass}>Dauer</legend>
+            <div className="flex items-center gap-2">
+              <div className="relative flex-1">
+                <input
+                  id="exercise-duration-min"
+                  aria-label="Dauer Minuten"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={3}
+                  className={`${inputClass} pr-12 text-right tabular-nums`}
+                  value={durationMin}
+                  onChange={(event) => setDurationMin(event.target.value)}
+                  placeholder="0"
+                />
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-muted-2">
+                  Min.
+                </span>
+              </div>
+              <span className="font-display text-xl font-bold text-muted-2" aria-hidden="true">
+                :
+              </span>
+              <div className="relative flex-1">
+                <input
+                  id="exercise-duration-sec"
+                  aria-label="Dauer Sekunden"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={2}
+                  className={`${inputClass} pr-12 text-right tabular-nums`}
+                  value={durationSec}
+                  onChange={(event) => setDurationSec(event.target.value)}
+                  // C4: Einstellige Sekunden beim Verlassen auf zwei Stellen ergänzen (5 → 05), passend zur Uhrform.
+                  onBlur={() => setDurationSec((value) => (value.length === 1 ? value.padStart(2, '0') : value))}
+                  placeholder="00"
+                />
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-sm text-muted-2">
+                  Sek.
+                </span>
+              </div>
+            </div>
+          </fieldset>
           <div>
             <label className={labelClass} htmlFor="exercise-difficulty">
               Schwierigkeitsgrad

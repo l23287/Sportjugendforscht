@@ -15,7 +15,8 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
   const planExercises = plan.exerciseIds
     .map((exerciseId) => exercises.find((e) => e.id === exerciseId))
     .filter((e): e is Exercise => Boolean(e));
-  const totalMinutes = planExercises.reduce((sum, e) => sum + e.durationMinutes, 0);
+  // C4: Summe in Sekunden, erst danach formatieren.
+  const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
   const overdue = isOverdue(plan.date);
 
   return (
@@ -50,7 +51,7 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
           <ListChecks size={14} /> {planExercises.length} Übungen
         </span>
         <span className="inline-flex items-center gap-1">
-          <Clock size={14} /> {formatDuration(totalMinutes)}
+          <Clock size={14} /> {formatDuration(totalSeconds)}
         </span>
         {plan.targetGroup && (
           <span className="inline-flex items-center gap-1">

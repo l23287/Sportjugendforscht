@@ -10,6 +10,8 @@ import type {
 } from '../types';
 import { generateId } from '../lib/id';
 import { loadJSON, saveJSON } from '../lib/storage';
+// C4: Umrechnung gespeicherter Übungen von Minuten auf Sekunden.
+import { migrateDurationSeconds } from '../lib/time';
 
 interface AppDataContextValue {
   plans: TrainingPlan[];
@@ -33,7 +35,17 @@ const AppDataContext = createContext<AppDataContextValue | null>(null);
 
 export function AppDataProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<TrainingPlan[]>(() => loadJSON('plans', []));
-  const [exercises, setExercises] = useState<Exercise[]>(() => loadJSON('exercises', []));
+  // C4: Beim Laden wird jede Übung auf `durationSeconds` umgestellt; das alte Feld `durationMinutes` entfällt
+  // und wird beim nächsten Speichern nicht mehr geschrieben.
+  const [exercises, setExercises] = useState<Exercise[]>(() => {
+    const stored = loadJSON<unknown>('exercises', []);
+    // C4: Absicherung gegen beschädigte Daten (kein Array) – die Migration darf die App nicht zum Absturz bringen.
+    if (!Array.isArray(stored)) return [];
+    return (stored as (Exercise & { durationMinutes?: unknown })[]).map(({ durationMinutes, ...exercise }) => ({
+      ...exercise,
+      durationSeconds: migrateDurationSeconds({ durationSeconds: exercise.durationSeconds, durationMinutes }),
+    }));
+  });
   const [serveSessions, setServeSessions] = useState<ServeSession[]>(() => loadJSON('serveSessions', []));
 
   useEffect(() => saveJSON('plans', plans), [plans]);

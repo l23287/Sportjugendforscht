@@ -18,14 +18,16 @@ export function computeExerciseUsage(plans: TrainingPlan[], exercises: Exercise[
     .sort((a, b) => b.count - a.count || a.exercise.name.localeCompare(b.exercise.name));
 }
 
+// C4: Liefert die durchschnittliche Plandauer in SEKUNDEN. Erst alle Sekunden aufsummieren, dann einmal auf
+// ganze Sekunden runden – nicht pro Übung runden, sonst wird die Summe ungenau.
 export function computeAverageDuration(plans: TrainingPlan[], exercises: Exercise[]): number {
   if (plans.length === 0) return 0;
   const total = plans.reduce((sum, plan) => {
-    const planMinutes = plan.exerciseIds.reduce((planSum, exerciseId) => {
+    const planSeconds = plan.exerciseIds.reduce((planSum, exerciseId) => {
       const exercise = exercises.find((e) => e.id === exerciseId);
-      return planSum + (exercise?.durationMinutes ?? 0);
+      return planSum + (exercise?.durationSeconds ?? 0);
     }, 0);
-    return sum + planMinutes;
+    return sum + planSeconds;
   }, 0);
   return Math.round(total / plans.length);
 }
