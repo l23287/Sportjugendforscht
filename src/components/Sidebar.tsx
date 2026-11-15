@@ -1,13 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import { NAV_ITEMS } from '../lib/nav';
-import { useSport } from '../context/SportContext';
 import { TrainerProMark } from './Logo';
-// C2: Einheitliches Sporticon mit farbiger Umrandung.
-import { SportBadge } from './SportBadge';
 
+// C2a: Sporticon wird nicht mehr unter dem Logo angezeigt, sondern oben rechts (siehe AppShell/SportPill).
 export function Sidebar() {
-  const { sport } = useSport();
-
   return (
     <aside className="hidden shrink-0 py-6 pl-6 md:block md:w-64 lg:w-72">
       <div className="sticky top-6 flex h-[calc(100dvh-3rem)] flex-col gap-8 rounded-3xl border border-border bg-surface p-5">
@@ -17,12 +13,7 @@ export function Sidebar() {
           </div>
           <div className="min-w-0">
             <p className="font-display text-lg font-extrabold leading-none text-ink">TrainerPro</p>
-            {/* C1: Emoji und Name aus dem Sportart-Objekt. */}
-            {/* C2: Am Desktop reicht laut Abstimmung die farbliche Umrandung hier in der Sidebar (kein Icon oben rechts). */}
-            <p className="mt-1.5 flex min-w-0 items-center gap-1.5 text-xs text-muted-2">
-              <SportBadge sport={sport} size="xs" />
-              <span className="truncate">{sport.name}</span>
-            </p>
+            {/* C2a: Sportart-Zeile unter dem Logo entfernt – das Sporticon sitzt jetzt oben rechts. */}
           </div>
         </div>
 
