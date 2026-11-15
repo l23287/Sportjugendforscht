@@ -20,6 +20,7 @@ hatte einen neutralen grauen Rahmen.
 - Gilt für Handy und Desktop gleichermaßen, da beide `SportPill` nutzen.
 - **Nicht geändert:** Die kleineren Sporticons an anderen Stellen („Willkommen zurück“, Statistik-Kachel,
   Auswahl-Chips in den Einstellungen) behalten die Kästchen-Umrandung aus C2 (`SportBadge`).
+  → Für den Auswahlbereich in den Einstellungen nachgezogen in [C2c](C2c.md).
 
 ## Geänderte Dateien
 

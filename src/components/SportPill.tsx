@@ -3,20 +3,16 @@
 // damit das Sporticon auf allen Geräten an derselben Stelle und gleich aussieht.
 // Ein Klick führt zu den Einstellungen, wo die Sportart gewechselt wird.
 // C2b: Die farbige Umrandung liegt jetzt um die GESAMTE Anzeige (Symbol + Name) statt nur um das kleine Emoji-Kästchen.
-import type { CSSProperties } from 'react';
 import { Link } from 'react-router-dom';
 import { useSport } from '../context/SportContext';
+// C2c: Rahmen-Stil in gemeinsamen Helfer ausgelagert (auch im Auswahlbereich der Einstellungen genutzt).
+import { sportFrameStyle } from '../lib/sportStyle';
 
 export function SportPill({ className = '' }: { className?: string }) {
   const { sport } = useSport();
 
-  // C2b: Rahmen in voller Sportfarbe (Kontrast ≥ 3:1, siehe C2), Hintergrund leicht getönt (Hex-Alpha 1f ≈ 12 %).
-  // Per style statt dynamischer Tailwind-Klasse – Tailwind generiert keine Klassen aus Laufzeitwerten.
-  const style = {
-    '--sport-color': sport.color,
-    borderColor: 'var(--sport-color)',
-    backgroundColor: `${sport.color}1f`,
-  } as CSSProperties;
+  // C2b: Rahmen in voller Sportfarbe (Kontrast ≥ 3:1, siehe C2), Hintergrund leicht getönt (≈ 12 %).
+  const style = sportFrameStyle(sport.color);
 
   return (
     <Link
