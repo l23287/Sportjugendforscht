@@ -6,8 +6,8 @@ bis zur Trainingsdurchführung mit Timer.
 
 ## Bereiche
 
-- **Onboarding & Konto** – 3-teilige Einführung vor dem ersten Login, danach Registrierung/Anmeldung
-  (lokales Session-Gate ohne Backend) mit Konto-Verwaltung in den Einstellungen.
+- **Einführung & Zugang** – Zugangspasswort, danach eine Einführung in sechs Schritten mit Sportart-Auswahl; erneut
+  aufrufbar in den Einstellungen (C10).
 - **Trainingspläne** – Pläne als Kacheln, Suche, Pläne nach Heute / Ausstehend / Vergangen gegliedert, Anlegen/Bearbeiten
   mit Übungsauswahl aus dem Pool inkl. Reihenfolge per ↑/↓, Detailansicht mit Start-Timer pro Übung.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).

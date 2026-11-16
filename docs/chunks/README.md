@@ -38,7 +38,9 @@ Läuft auf demselben Branch `phase-1` weiter und wird in diesem Ordner dokumenti
 | C8a | Nachbesserung: Suchleiste auf der Startseite über den Kernzielen | ✅ umgesetzt | 16.11.2026 | [C8a.md](C8a.md) |
 | C9 | Trainer-Funktionen (Zielgruppe, Schwierigkeitsgrad) in den Einstellungen ein-/ausschaltbar | ✅ umgesetzt | 16.11.2026 | [C9.md](C9.md) |
 | C9a | Nachbesserung: Hauptschalter „Alle Funktionen“ (mit Zwischenzustand) | ✅ umgesetzt | 16.11.2026 | [C9a.md](C9a.md) |
-| C10 | Einführung in die App beim ersten Öffnen (mit Claude Design) | ⏳ offen | – | – |
+| C10 | Einführung in die App beim ersten Öffnen (Entwurf mit Claude Design) | ✅ umgesetzt | 16.11.2026 | [C10.md](C10.md) |
+
+**Flowstate B ist abgeschlossen.** Alle fünf Chunks (C6–C10) plus die Nachbesserungen C6a, C7a, C8a und C9a sind auf `phase-1` umgesetzt.
 
 ### Für später vorgemerkt
 

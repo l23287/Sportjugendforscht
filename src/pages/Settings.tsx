@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
+// C10: Symbol für „Einführung erneut ansehen“.
+import { PlayCircle } from 'lucide-react';
 // C8: Kernziele festlegen.
 import { CoreGoalsSettings } from '../components/CoreGoalsSettings';
 // C9: Trainer-Funktionen ein-/ausschalten.
@@ -13,6 +15,7 @@ export function Settings() {
   const [impressumOpen, setImpressumOpen] = useState(false);
   const [datenschutzOpen, setDatenschutzOpen] = useState(false);
   const { hash } = useLocation();
+  const navigate = useNavigate();
 
   // C8: Link „Kernziele festlegen/Bearbeiten“ von der Startseite (#kernziele) springt direkt zur Karte.
   useEffect(() => {
@@ -37,6 +40,16 @@ export function Settings() {
         {/* C1: Auswahl aus 25 Sportarten plus eigene Sportarten hinzufügen/löschen. */}
         <SportPicker />
       </div>
+
+      {/* C10: Einführung erneut ansehen – runder Sekundär-Button im Stil von „Heute“ im Kalender (C6). */}
+      <button
+        type="button"
+        onClick={() => navigate('/onboarding', { state: { replay: true } })}
+        className="inline-flex h-11 items-center gap-2 self-start rounded-full border border-border bg-surface px-4 text-sm font-semibold text-ink transition hover:bg-surface-2"
+      >
+        <PlayCircle size={16} className="text-accent" aria-hidden="true" />
+        Einführung erneut ansehen
+      </button>
 
       <div className="flex items-center gap-3 text-sm font-medium text-muted">
         <button

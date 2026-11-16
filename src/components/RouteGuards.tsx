@@ -1,9 +1,19 @@
 import type { ReactNode } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { hasSeenOnboarding } from '../lib/onboarding';
 // C3: Für den Sportart-Schutz des Aufschlagtrainings.
 import { useSport } from '../context/SportContext';
 import { hasServeTraining } from '../lib/sport';
+
+// C10: Einführung für JEDEN Einstieg in die App – nicht nur über die Startadresse „/“. Wer direkt z. B. /kalender
+// öffnet und die (neue) Einführung noch nicht gesehen hat, landet erst dort und danach auf der gewünschten Seite.
+export function RequireOnboarding({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  if (!hasSeenOnboarding()) {
+    return <Navigate to="/onboarding" replace state={{ from: location.pathname + location.search + location.hash }} />;
+  }
+  return <>{children}</>;
+}
 
 export function RootRedirect() {
   return <Navigate to={hasSeenOnboarding() ? '/plaene' : '/onboarding'} replace />;

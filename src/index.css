@@ -90,3 +90,12 @@
   background: var(--color-surface-2);
   border-radius: 999px;
 }
+
+/* C10: „Bewegung reduzieren“ (Systemeinstellung) respektieren – Einblendungen und schwebende Hintergrund-Blobs
+   werden dann ohne Animation dargestellt. Gilt für die ganze App, auch für die Einführung. */
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in,
+  .animate-blob-float {
+    animation: none;
+  }
+}

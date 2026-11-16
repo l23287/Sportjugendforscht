@@ -8,7 +8,8 @@ import { Disclaimer } from './components/Disclaimer';
 import { SiteGate } from './components/SiteGate';
 import { ScrollToTop } from './components/ScrollToTop';
 // C3: ServeTrainingGuard sperrt das Aufschlagtraining für andere Sportarten als Tischtennis.
-import { RootRedirect, ServeTrainingGuard } from './components/RouteGuards';
+// C10: RequireOnboarding – Einführung vor jedem Einstieg in die App.
+import { RequireOnboarding, RootRedirect, ServeTrainingGuard } from './components/RouteGuards';
 import { Onboarding } from './pages/Onboarding';
 import { PlansOverview } from './pages/PlansOverview';
 import { PlanForm } from './pages/PlanForm';
@@ -35,7 +36,14 @@ export default function App() {
               <Route path="/" element={<RootRedirect />} />
               <Route path="/onboarding" element={<Onboarding />} />
 
-              <Route element={<AppShell />}>
+              {/* C10: Alle App-Seiten setzen die (aktuelle) Einführung voraus. */}
+              <Route
+                element={
+                  <RequireOnboarding>
+                    <AppShell />
+                  </RequireOnboarding>
+                }
+              >
                 <Route path="/plaene" element={<PlansOverview />} />
                 <Route path="/plaene/neu" element={<PlanForm />} />
                 <Route path="/plaene/:id" element={<PlanDetail />} />
