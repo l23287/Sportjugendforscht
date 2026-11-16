@@ -1,6 +1,8 @@
 import { useMemo, useState, type FormEvent } from 'react';
 // C5: Navigate für den Schutz beim Bearbeiten von Plänen einer anderen Sportart.
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+// C6: Datum aus dem Kalender übernehmen (?datum=JJJJ-MM-TT).
+import { isDateKey } from '../lib/dateKey';
 import { ArrowDown, ArrowUp, Check, ChevronLeft, Plus, X } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -30,12 +32,16 @@ function PlanFormContent() {
   const { exercises, plans, addPlan, updatePlan } = useAppData();
   const editingPlan = id ? plans.find((plan) => plan.id === id) : undefined;
   const isEditing = Boolean(editingPlan);
-  const backTarget = editingPlan ? `/plaene/${editingPlan.id}` : '/plaene';
 
   const [name, setName] = useState(editingPlan?.name ?? '');
   const [description, setDescription] = useState(editingPlan?.description ?? '');
   const [targetGroup, setTargetGroup] = useState(editingPlan?.targetGroup ?? '');
-  const [date, setDate] = useState(editingPlan?.date ?? '');
+  // C6: Neuer Plan aus dem Kalender („Neuer Plan für diesen Tag“) – Datum vorbelegen, sofern gültig.
+  const [searchParams] = useSearchParams();
+  const presetDate = searchParams.get('datum');
+  const [date, setDate] = useState(editingPlan?.date ?? (isDateKey(presetDate) ? presetDate : ''));
+  // C6: Aus dem Kalender gekommen → „Zurück“/„Abbrechen“ führt wieder in den Kalender.
+  const backTarget = editingPlan ? `/plaene/${editingPlan.id}` : isDateKey(presetDate) ? '/kalender' : '/plaene';
   const [exerciseIds, setExerciseIds] = useState<string[]>(editingPlan?.exerciseIds ?? []);
   const [poolQuery, setPoolQuery] = useState('');
   const [error, setError] = useState('');

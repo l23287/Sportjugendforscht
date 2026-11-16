@@ -23,3 +23,15 @@ Jede Weiterentwicklung von TrainerPro ist in **Chunks** eingeteilt. Für jeden C
 | C5 | Übungen und Pläne je Sportart getrennt speichern/anzeigen | ✅ umgesetzt | 15.11.2026 | [C5.md](C5.md) |
 
 **Flowstate A ist abgeschlossen.** Alle fünf Chunks (plus die Nachbesserungen C2a–C2c) sind auf `phase-1` umgesetzt.
+
+## Flowstate B (Phase 2)
+
+Läuft auf demselben Branch `phase-1` weiter und wird in diesem Ordner dokumentiert (Abstimmung im Team).
+
+| Chunk | Inhalt | Status | Datum | Doku |
+|-------|--------|--------|-------|------|
+| C6 | Kalendertool mit Monatsansicht im Menü | ✅ umgesetzt | 16.11.2026 | [C6.md](C6.md) |
+| C7 | Wiederkehrende Übung: Uhrzeit und Wiederholungen für Pläne, im Kalender farblich sichtbar | ⏳ offen | – | – |
+| C8 | Zielsetzungstool: bis zu drei Kernziele auf der Hauptseite, Einstellung in den Einstellungen | ⏳ offen | – | – |
+| C9 | Trainer-Funktionen (Zielgruppe, Schwierigkeitsgrad) in den Einstellungen ein-/ausschaltbar | ⏳ offen | – | – |
+| C10 | Einführung in die App beim ersten Öffnen (mit Claude Design) | ⏳ offen | – | – |

@@ -17,6 +17,8 @@ import { ExercisesLayout } from './pages/ExercisesLayout';
 import { Settings } from './pages/Settings';
 import { Statistics } from './pages/Statistics';
 import { ServeTraining } from './pages/ServeTraining';
+// C6: Kalender mit Monatsansicht.
+import { Calendar } from './pages/Calendar';
 
 export default function App() {
   return (
@@ -46,6 +48,8 @@ export default function App() {
                     }
                   />
                 </Route>
+                {/* C6: Kalender */}
+                <Route path="/kalender" element={<Calendar />} />
                 <Route path="/statistiken" element={<Statistics />} />
                 {/* C3: Alte Adresse bleibt für Lesezeichen erhalten und leitet in den Übungsbereich weiter. */}
                 <Route path="/aufschlagtraining" element={<Navigate to="/uebungen/aufschlagtraining" replace />} />

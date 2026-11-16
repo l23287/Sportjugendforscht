@@ -1,3 +1,6 @@
+// C6: Zeitzonensichere Datums-Helfer.
+import { isDateKey, parseDateKey, todayKey } from './dateKey';
+
 // C4: Höchstdauer einer Übung: 3 Stunden (Abstimmung im Team).
 export const MAX_DURATION_SECONDS = 3 * 60 * 60;
 
@@ -46,19 +49,18 @@ export function migrateDurationSeconds(entry: { durationSeconds?: unknown; durat
   return DEFAULT_DURATION_SECONDS;
 }
 
-function startOfDay(date: Date): number {
-  const copy = new Date(date);
-  copy.setHours(0, 0, 0, 0);
-  return copy.getTime();
-}
-
+// C6: isOverdue/formatDate lesen das Datum zeitzonensicher (siehe lib/dateKey.ts). Vorher wurde
+// `new Date('JJJJ-MM-TT')` verwendet (= UTC-Mitternacht) – westlich von UTC einen Tag verschoben.
 export function isOverdue(dateStr: string | null): boolean {
-  if (!dateStr) return false;
-  return startOfDay(new Date(dateStr)) < startOfDay(new Date());
+  if (!dateStr || !isDateKey(dateStr)) return false;
+  // C6: DateKeys lassen sich als Text vergleichen („2026-11-15“ < „2026-11-16“).
+  return dateStr < todayKey();
 }
 
 export function formatDate(dateStr: string): string {
-  return new Date(dateStr).toLocaleDateString('de-DE', {
+  // C6: DateKey als lokales Datum lesen; andere Formate (z. B. Zeitstempel) wie bisher.
+  const date = isDateKey(dateStr) ? parseDateKey(dateStr) : new Date(dateStr);
+  return date.toLocaleDateString('de-DE', {
     day: '2-digit',
     month: '2-digit',
     year: 'numeric',
