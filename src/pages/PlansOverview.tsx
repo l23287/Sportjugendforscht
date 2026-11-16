@@ -67,10 +67,12 @@ export function PlansOverview() {
         </div>
       </header>
 
-      {/* C8: Kernziele der aktiven Sportart direkt unter der Begrüßung, vor den Plänen. */}
-      <CoreGoalsPanel />
-
+      {/* C8a: Suchleiste über den Kernzielen (Abstimmung im Team) – Suche bleibt das erste Werkzeug der Seite. */}
       <SearchInput value={query} onChange={setQuery} placeholder="Pläne durchsuchen…" className="max-w-md" />
+
+      {/* C8: Kernziele der aktiven Sportart direkt unter der Begrüßung, vor den Plänen.
+          C8a: jetzt zwischen Suchleiste und Plänen. */}
+      <CoreGoalsPanel />
 
       {filteredPlans.length === 0 ? (
         <EmptyState
