@@ -19,7 +19,7 @@ bis zur Trainingsdurchführung mit Timer.
 - **Kernziele** – bis zu drei Ziele je Sportart (mit optionalem Zieldatum, abhakbar), festgelegt in den Einstellungen
   und angezeigt auf der Startseite (C8).
 - **Trainer-Funktionen** – Zielgruppe und Schwierigkeitsgrad lassen sich in den Einstellungen ein- und ausschalten;
-  gespeicherte Werte bleiben erhalten (C9).
+  gespeicherte Werte bleiben erhalten (C9); ein Hauptschalter schaltet alle gleichzeitig (C9a).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
   die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes

@@ -3,11 +3,13 @@
 // Trainer:in arbeitet, nicht die Sportart. Ausschalten blendet nur aus – gespeicherte Werte bleiben erhalten.
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import { loadJSON, saveJSON } from '../lib/storage';
-import { sanitizeTrainerFeatures, type TrainerFeatureKey, type TrainerFeatures } from '../lib/trainerFeatures';
+import { TRAINER_FEATURES, sanitizeTrainerFeatures, type TrainerFeatureKey, type TrainerFeatures } from '../lib/trainerFeatures';
 
 interface TrainerFeaturesContextValue {
   features: TrainerFeatures;
   setFeature: (key: TrainerFeatureKey, enabled: boolean) => void;
+  /** C9a: Alle Trainer-Funktionen gleichzeitig ein- oder ausschalten (Hauptschalter). */
+  setAllFeatures: (enabled: boolean) => void;
 }
 
 const TrainerFeaturesContext = createContext<TrainerFeaturesContextValue | null>(null);
@@ -23,6 +25,9 @@ export function TrainerFeaturesProvider({ children }: { children: ReactNode }) {
     () => ({
       features,
       setFeature: (key, enabled) => setFeatures((prev) => ({ ...prev, [key]: enabled })),
+      // C9a: Über die zentrale Liste – künftige Schalter sind automatisch eingeschlossen.
+      setAllFeatures: (enabled) =>
+        setFeatures(Object.fromEntries(TRAINER_FEATURES.map(({ key }) => [key, enabled])) as TrainerFeatures),
     }),
     [features],
   );
