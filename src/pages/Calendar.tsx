@@ -2,6 +2,7 @@
 // Termine sind die Pläne der aktiven Sportart an ihrem Datum (`plan.date`) – keine zweite Terminliste,
 // damit Kalender und Plan nie voneinander abweichen. Planen im Kalender: neuen Plan für einen Tag anlegen
 // oder einen vorhandenen Plan auf den Tag legen (Abstimmung im Team).
+// C6a: Neues Design – Tage nur als Zahlen ohne Kästchen/Rahmen; Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CalendarPlus, CalendarX, ChevronLeft, ChevronRight, ClipboardList, Clock, MoveRight } from 'lucide-react';
@@ -20,7 +21,10 @@ import {
   type CalendarDay,
 } from '../lib/calendar';
 import { parseDateKey, todayKey, type DateKey } from '../lib/dateKey';
-import { formatDate, formatDuration, isOverdue } from '../lib/time';
+import { formatDate, formatDuration } from '../lib/time';
+// C6a: Plan-Status statt isOverdue().
+import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanStatus } from '../lib/planStatus';
+import { PlanStatusBadge } from '../components/PlanStatusBadge';
 import type { Exercise, TrainingPlan } from '../types';
 
 export function Calendar() {
@@ -114,7 +118,8 @@ export function Calendar() {
             </button>
           </div>
 
-          <div className="grid grid-cols-7 gap-1 sm:gap-2" aria-hidden="true">
+          {/* C6a: Raster ohne Zellrahmen – nur Wochentage und Tageszahlen. */}
+          <div className="grid grid-cols-7" aria-hidden="true">
             {WEEKDAY_LABELS.map((label) => (
               <span key={label} className="text-center text-xs font-semibold text-muted-2">
                 {label}
@@ -122,7 +127,7 @@ export function Calendar() {
             ))}
           </div>
 
-          <div className="grid grid-cols-7 gap-1 sm:gap-2">
+          <div className="grid grid-cols-7 gap-y-1">
             {grid.map((day) => (
               <DayCell
                 key={day.key}
@@ -134,6 +139,16 @@ export function Calendar() {
               />
             ))}
           </div>
+
+          {/* C6a: Legende der drei Zustände – Farbe ist nie die einzige Information (auch im Screenreader-Text). */}
+          <ul className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 border-t border-border pt-4 text-xs text-muted">
+            {PLAN_STATUS_ORDER.map((status) => (
+              <li key={status} className="inline-flex items-center gap-1.5">
+                <span className={`h-2 w-2 rounded-full ${PLAN_STATUS_META[status].dotClass}`} aria-hidden="true" />
+                {PLAN_STATUS_META[status].label}
+              </li>
+            ))}
+          </ul>
         </section>
 
         {/* C6: Gewählter Tag – Liste der Pläne und Aktionen zum Planen. */}
@@ -200,8 +215,11 @@ export function Calendar() {
                   <ClipboardList size={18} className="shrink-0 text-muted-2" />
                   <span className="min-w-0 flex-1">
                     <span className="block truncate font-semibold text-ink">{plan.name}</span>
-                    <span className={`block text-xs ${isOverdue(plan.date) ? 'text-danger' : 'text-muted-2'}`}>
-                      {plan.date ? `Bisher: ${formatDate(plan.date)}` : 'Noch ohne Datum'}
+                    {/* C6a: Bisheriges Datum mit Status statt roter „Überfällig“-Farbe. */}
+                    <span className="block text-xs text-muted-2">
+                      {plan.date
+                        ? `Bisher: ${formatDate(plan.date)}${statusSuffix(plan.date)}`
+                        : 'Noch ohne Datum'}
                     </span>
                   </span>
                   <MoveRight size={16} className="shrink-0 text-muted-2" />
@@ -215,7 +233,16 @@ export function Calendar() {
   );
 }
 
+// C6a: Status-Text für die Planauswahl, z. B. „ · Vergangen“.
+function statusSuffix(date: string): string {
+  const status = getPlanStatus(date);
+  return status ? ` · ${PLAN_STATUS_META[status].label}` : '';
+}
+
 // C6: Ein Tag im Raster. Handy: Tageszahl + Punkte; ab md: Tageszahl + Plannamen.
+// C6a: Ohne Kästchen und Rahmen – der Tag ist nur seine Zahl. Hervorhebungen sitzen als Kreis direkt um die Zahl:
+//      gewählt = gefüllter Kreis im blauen Verlauf (wie aktive Navigation), heute = zart getönter Kreis in Akzentfarbe.
+//      Termine als Punkte bzw. Namen in der Farbe ihres Status (Heute / Ausstehend / Vergangen).
 function DayCell({
   day,
   plans,
@@ -229,7 +256,9 @@ function DayCell({
   isSelected: boolean;
   onSelect: () => void;
 }) {
-  const overdue = plans.length > 0 && isOverdue(day.key);
+  // C6a: Alle Pläne eines Tages teilen sich den Status des Tages.
+  const status = plans.length > 0 ? getPlanStatus(day.key) : null;
+  const meta = status ? PLAN_STATUS_META[status] : null;
   const countLabel = plans.length === 0 ? 'kein Training' : plans.length === 1 ? '1 Plan' : `${plans.length} Pläne`;
   const MAX_NAMES = 2;
 
@@ -239,46 +268,44 @@ function DayCell({
       onClick={onSelect}
       aria-pressed={isSelected}
       // C6: Vollständige Ansage für Screenreader, z. B. „Montag, 16. November 2026, 2 Pläne, heute“.
-      aria-label={`${formatLongDay(day.key)}, ${countLabel}${isToday ? ', heute' : ''}${overdue ? ', überfällig' : ''}`}
-      // C6: Gewählt = blauer Verlauf wie aktive Navigation; heute = Ring; Nachbarmonat gedimmt.
-      className={`flex h-12 flex-col items-center justify-center gap-1 rounded-xl border text-sm transition sm:h-14 md:h-28 md:items-stretch md:justify-start md:p-2 ${
-        isSelected
-          ? 'border-transparent bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_8px_20px_rgba(37,99,235,0.3)]'
-          : `border-border bg-bg-soft hover:border-muted-2 ${day.inMonth ? 'text-ink' : 'text-muted-2 opacity-50'}`
-      } ${isToday && !isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-surface' : ''}`}
+      // C6a: Status statt „überfällig“ („…, 1 Plan, vergangen“).
+      aria-label={`${formatLongDay(day.key)}, ${countLabel}${isToday ? ', heute' : status ? `, ${meta!.label.toLowerCase()}` : ''}`}
+      className={`group flex h-14 min-w-0 flex-col items-center gap-1 rounded-xl pt-1 outline-none focus-visible:ring-2 focus-visible:ring-primary md:h-28 md:pt-2 ${
+        day.inMonth ? '' : 'opacity-40'
+      }`}
     >
-      <span className={`font-semibold leading-none ${isToday ? 'font-extrabold' : ''}`}>{day.dayOfMonth}</span>
+      {/* C6a: Die Tageszahl selbst – Kreis nur bei „gewählt“ und „heute“, sonst schlicht. */}
+      <span
+        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-sm leading-none transition ${
+          isSelected
+            ? 'bg-gradient-to-br from-primary to-primary-dark font-bold text-white shadow-[0_6px_16px_rgba(37,99,235,0.35)]'
+            : isToday
+              ? 'bg-accent/15 font-extrabold text-accent group-hover:bg-accent/25'
+              : `font-semibold group-hover:bg-surface-2 ${day.inMonth ? 'text-ink' : 'text-muted-2'}`
+        }`}
+      >
+        {day.dayOfMonth}
+      </span>
 
-      {/* C6: Handy – bis zu 3 Punkte (rot bei überfälligen Plänen). */}
-      {plans.length > 0 && (
+      {/* C6: Handy – bis zu 3 Punkte. C6a: in der Farbe des Status. */}
+      {meta && (
         <span className="flex gap-0.5 md:hidden" aria-hidden="true">
           {plans.slice(0, 3).map((plan) => (
-            <span
-              key={plan.id}
-              className={`h-1.5 w-1.5 rounded-full ${isSelected ? 'bg-white' : overdue ? 'bg-danger' : 'bg-accent'}`}
-            />
+            <span key={plan.id} className={`h-1.5 w-1.5 rounded-full ${meta.dotClass}`} />
           ))}
         </span>
       )}
 
-      {/* C6: Desktop – Plannamen (max. 2) + „+n“. */}
-      {plans.length > 0 && (
-        <span className="mt-1 hidden min-w-0 flex-col gap-1 md:flex" aria-hidden="true">
+      {/* C6: Desktop – Plannamen (max. 2) + „+n“. C6a: schlichte Textzeilen mit Status-Punkt statt farbiger Kästchen. */}
+      {meta && (
+        <span className="hidden w-full min-w-0 flex-col items-center gap-0.5 px-1 md:flex" aria-hidden="true">
           {plans.slice(0, MAX_NAMES).map((plan) => (
-            <span
-              key={plan.id}
-              className={`truncate rounded-md px-1.5 py-0.5 text-left text-[11px] font-semibold ${
-                isSelected ? 'bg-white/20 text-white' : overdue ? 'bg-danger/15 text-danger' : 'bg-primary-soft text-accent'
-              }`}
-            >
-              {plan.name}
+            <span key={plan.id} className={`flex max-w-full min-w-0 items-center gap-1 text-[11px] font-semibold ${meta.textClass}`}>
+              <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${meta.dotClass}`} />
+              <span className="truncate">{plan.name}</span>
             </span>
           ))}
-          {plans.length > MAX_NAMES && (
-            <span className={`text-left text-[11px] ${isSelected ? 'text-white/80' : 'text-muted-2'}`}>
-              +{plans.length - MAX_NAMES}
-            </span>
-          )}
+          {plans.length > MAX_NAMES && <span className="text-[11px] text-muted">+{plans.length - MAX_NAMES} weitere</span>}
         </span>
       )}
     </button>
@@ -286,22 +313,25 @@ function DayCell({
 }
 
 // C6: Plan in der Tagesliste – Anzeigen-Link und „Datum entfernen“.
+// C6a: Status-Badge statt „Überfällig“; Pläne des Tages mit Akzent-Rahmen wie in der Plankarte.
 function PlanRow({ plan, exercises, onUnschedule }: { plan: TrainingPlan; exercises: Exercise[]; onUnschedule: () => void }) {
   const totalSeconds = plan.exerciseIds
     .map((id) => exercises.find((e) => e.id === id))
     .filter((e): e is Exercise => Boolean(e))
     .reduce((sum, e) => sum + e.durationSeconds, 0);
-  const overdue = isOverdue(plan.date);
+  const status = getPlanStatus(plan.date);
 
   return (
     <li
-      className={`flex items-center gap-3 rounded-2xl border bg-bg-soft p-3 ${overdue ? 'border-danger/50' : 'border-border'}`}
+      className={`flex items-center gap-3 rounded-2xl border bg-bg-soft p-3 ${status === 'heute' ? 'border-accent/60' : 'border-border'}`}
     >
       <Link to={`/plaene/${plan.id}`} className="min-w-0 flex-1">
         <span className="block truncate font-semibold text-ink hover:underline">{plan.name}</span>
-        <span className="mt-0.5 flex items-center gap-2 text-xs text-muted-2">
-          <Clock size={12} /> {formatDuration(totalSeconds)}
-          {overdue && <span className="font-semibold text-danger">Überfällig</span>}
+        <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-2">
+          <span className="inline-flex items-center gap-1">
+            <Clock size={12} /> {formatDuration(totalSeconds)}
+          </span>
+          {status && <PlanStatusBadge status={status} />}
         </span>
       </Link>
       <IconButton icon={<CalendarX size={16} />} label={`Datum von „${plan.name}“ entfernen`} onClick={onUnschedule} />

@@ -31,6 +31,7 @@ Läuft auf demselben Branch `phase-1` weiter und wird in diesem Ordner dokumenti
 | Chunk | Inhalt | Status | Datum | Doku |
 |-------|--------|--------|-------|------|
 | C6 | Kalendertool mit Monatsansicht im Menü | ✅ umgesetzt | 16.11.2026 | [C6.md](C6.md) |
+| C6a | Nachbesserung: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“, Kalender nach „Übungen“, Tage ohne Rahmen | ✅ umgesetzt | 16.11.2026 | [C6a.md](C6a.md) |
 | C7 | Wiederkehrende Übung: Uhrzeit und Wiederholungen für Pläne, im Kalender farblich sichtbar | ⏳ offen | – | – |
 | C8 | Zielsetzungstool: bis zu drei Kernziele auf der Hauptseite, Einstellung in den Einstellungen | ⏳ offen | – | – |
 | C9 | Trainer-Funktionen (Zielgruppe, Schwierigkeitsgrad) in den Einstellungen ein-/ausschaltbar | ⏳ offen | – | – |

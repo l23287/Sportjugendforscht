@@ -10,9 +10,10 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { to: '/plaene', label: 'Trainingspläne', icon: ClipboardList },
-  // C6: Kalender direkt nach den Trainingsplänen (gehört inhaltlich dazu).
-  { to: '/kalender', label: 'Kalender', icon: CalendarDays },
   { to: '/uebungen', label: 'Übungen', icon: Dumbbell },
+  // C6: Kalender als eigener Menüpunkt.
+  // C6a: Position rechts neben bzw. unter „Übungen“ (vorher direkt nach „Trainingspläne“).
+  { to: '/kalender', label: 'Kalender', icon: CalendarDays },
   { to: '/statistiken', label: 'Statistiken', icon: BarChart3 },
   // C3: Eigener Menüpunkt „Aufschlagtraining“ entfernt – das Aufschlagtraining ist jetzt ein Reiter im
   // Übungsbereich (/uebungen/aufschlagtraining) und nur bei Tischtennis sichtbar.

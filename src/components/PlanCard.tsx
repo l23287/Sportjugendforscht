@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom';
-import { Calendar, ClipboardList, Clock, ListChecks, Pencil, Trash2, Users } from 'lucide-react';
+import { ClipboardList, Clock, ListChecks, Pencil, Trash2, Users } from 'lucide-react';
 import type { Exercise, TrainingPlan } from '../types';
-import { formatDate, formatDuration, isOverdue } from '../lib/time';
+import { formatDuration } from '../lib/time';
+// C6a: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
+import { getPlanStatus } from '../lib/planStatus';
+import { PlanStatusBadge } from './PlanStatusBadge';
 import { IconButton } from './IconButton';
 
 interface PlanCardProps {
@@ -17,28 +20,21 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
     .filter((e): e is Exercise => Boolean(e));
   // C4: Summe in Sekunden, erst danach formatieren.
   const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
-  const overdue = isOverdue(plan.date);
+  const status = getPlanStatus(plan.date);
 
   return (
     <div
       className={`flex flex-col gap-4 rounded-3xl border bg-surface p-5 ${
-        overdue ? 'border-danger/50' : 'border-border'
+        // C6a: Pläne des Tages heben sich mit Akzent-Rahmen hervor; vergangene sind neutral (nicht mehr rot).
+        status === 'heute' ? 'border-accent/60' : 'border-border'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_8px_18px_rgba(37,99,235,0.3)]">
           <ClipboardList size={22} />
         </div>
-        {plan.date && (
-          <span
-            className={`inline-flex items-center gap-1 rounded-2xl px-3 py-1 text-xs font-semibold whitespace-nowrap ${
-              overdue ? 'bg-danger/15 text-danger' : 'bg-surface-2 text-muted'
-            }`}
-          >
-            <Calendar size={12} />
-            {formatDate(plan.date)}
-          </span>
-        )}
+        {/* C6a: Status-Badge mit Datum (ersetzt das rote Datum bei überfälligen Plänen). */}
+        {status && plan.date && <PlanStatusBadge status={status} date={plan.date} />}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -59,8 +55,6 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
           </span>
         )}
       </div>
-
-      {overdue && <p className="text-xs font-semibold text-danger">Überfällig</p>}
 
       <div className="mt-1 flex items-center gap-2">
         <Link

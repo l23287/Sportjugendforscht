@@ -8,13 +8,13 @@ bis zur Trainingsdurchführung mit Timer.
 
 - **Onboarding & Konto** – 3-teilige Einführung vor dem ersten Login, danach Registrierung/Anmeldung
   (lokales Session-Gate ohne Backend) mit Konto-Verwaltung in den Einstellungen.
-- **Trainingspläne** – Pläne als Kacheln, Suche, überfällige Pläne werden rot markiert, Anlegen/Bearbeiten
+- **Trainingspläne** – Pläne als Kacheln, Suche, Pläne nach Heute / Ausstehend / Vergangen gegliedert, Anlegen/Bearbeiten
   mit Übungsauswahl aus dem Pool inkl. Reihenfolge per ↑/↓, Detailansicht mit Start-Timer pro Übung.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
   Die Dauer ist sekundengenau einstellbar und wird in Uhrform angezeigt, z. B. „1:30 Min.“ (C4).
   Bei Tischtennis zusätzlich der Reiter **Aufschlagtraining** (Live-Tracking gut/schlecht mit Verlaufsdiagramm, C3).
 - **Kalender** – Monatsansicht der Pläne der aktiven Sportart; neuen Plan für einen Tag anlegen oder vorhandenen Plan
-  auf einen Tag legen (C6).
+  auf einen Tag legen (C6). Pläne sind „Heute“, „Ausstehend“ oder „Vergangen“ (C6a).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
   die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes

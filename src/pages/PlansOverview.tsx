@@ -8,6 +8,9 @@ import { PlanCard } from '../components/PlanCard';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useSport } from '../context/SportContext';
+// C6a: Pläne nach Status gruppieren (Heute / Ausstehend / Vergangen / Ohne Datum).
+import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanStatus, type PlanStatus } from '../lib/planStatus';
+import type { TrainingPlan } from '../types';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
 
@@ -25,6 +28,20 @@ export function PlansOverview() {
   }, [plans, query]);
 
   const pendingDeletePlan = plans.find((plan) => plan.id === pendingDeleteId);
+
+  // C6a: Abschnitte „Pläne des Tages“, „Ausstehende Pläne“ (nächster Termin zuerst),
+  // „Vergangene Pläne“ (jüngster zuerst) und „Ohne Datum“. Leere Abschnitte werden ausgeblendet.
+  const sections = useMemo(() => {
+    const groups: Record<PlanStatus | 'ohne', TrainingPlan[]> = { heute: [], ausstehend: [], vergangen: [], ohne: [] };
+    for (const plan of filteredPlans) groups[getPlanStatus(plan.date) ?? 'ohne'].push(plan);
+    const byDate = (a: TrainingPlan, b: TrainingPlan) => (a.date ?? '').localeCompare(b.date ?? '');
+    groups.ausstehend.sort(byDate);
+    groups.vergangen.sort((a, b) => byDate(b, a));
+    return [
+      ...PLAN_STATUS_ORDER.map((status) => ({ key: status, title: PLAN_STATUS_META[status].sectionTitle, plans: groups[status] })),
+      { key: 'ohne', title: 'Ohne Datum', plans: groups.ohne },
+    ].filter((section) => section.plans.length > 0);
+  }, [filteredPlans]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -63,15 +80,26 @@ export function PlansOverview() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredPlans.map((plan) => (
-            <PlanCard
-              key={plan.id}
-              plan={plan}
-              exercises={exercises}
-              onEdit={() => navigate(`/plaene/${plan.id}/bearbeiten`)}
-              onDelete={() => setPendingDeleteId(plan.id)}
-            />
+        // C6a: Ein Abschnitt je Status; Überschriften im Stil der übrigen Abschnittsüberschriften (h2, font-display).
+        <div className="flex flex-col gap-8">
+          {sections.map((section) => (
+            <section key={section.key} aria-labelledby={`plans-section-${section.key}`} className="flex flex-col gap-4">
+              <h2 id={`plans-section-${section.key}`} className="flex items-center gap-2 font-display text-lg font-bold text-ink">
+                {section.title}
+                <span className="rounded-full bg-surface-2 px-2.5 py-0.5 text-xs font-semibold text-muted">{section.plans.length}</span>
+              </h2>
+              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                {section.plans.map((plan) => (
+                  <PlanCard
+                    key={plan.id}
+                    plan={plan}
+                    exercises={exercises}
+                    onEdit={() => navigate(`/plaene/${plan.id}/bearbeiten`)}
+                    onDelete={() => setPendingDeleteId(plan.id)}
+                  />
+                ))}
+              </div>
+            </section>
           ))}
         </div>
       )}

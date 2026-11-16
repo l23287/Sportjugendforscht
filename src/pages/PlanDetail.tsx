@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // C5: Navigate für die Weiterleitung bei Plänen einer anderen Sportart.
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { Calendar, ChevronLeft, Clock, Dumbbell, Pencil, Play, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, Clock, Dumbbell, Pencil, Play, Trash2, Users } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -9,7 +9,10 @@ import { DifficultyBadge } from '../components/DifficultyBadge';
 import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Timer } from '../components/Timer';
-import { formatDate, formatDuration, isOverdue } from '../lib/time';
+import { formatDuration } from '../lib/time';
+// C6a: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
+import { getPlanStatus } from '../lib/planStatus';
+import { PlanStatusBadge } from '../components/PlanStatusBadge';
 import type { Exercise } from '../types';
 
 export function PlanDetail() {
@@ -47,7 +50,7 @@ export function PlanDetail() {
     .filter((e): e is Exercise => Boolean(e));
   // C4: Summe in Sekunden, erst danach formatieren.
   const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
-  const overdue = isOverdue(plan.date);
+  const status = getPlanStatus(plan.date);
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -73,17 +76,8 @@ export function PlanDetail() {
 
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
-          {plan.date && (
-            <span
-              className={`inline-flex items-center gap-1.5 rounded-2xl px-3 py-1.5 text-xs font-semibold ${
-                overdue ? 'bg-danger/15 text-danger' : 'bg-surface-2 text-muted'
-              }`}
-            >
-              <Calendar size={13} />
-              {formatDate(plan.date)}
-              {overdue && ' · Überfällig'}
-            </span>
-          )}
+          {/* C6a: Status-Badge mit Datum. */}
+          {status && plan.date && <PlanStatusBadge status={status} date={plan.date} />}
           {plan.targetGroup && (
             <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
               <Users size={13} />
