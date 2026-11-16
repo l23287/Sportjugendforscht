@@ -50,7 +50,8 @@ export interface Exercise {
   /** C4: Dauer in ganzen Sekunden (vorher `durationMinutes` in ganzen Minuten). Ganze Zahl statt Kommaminuten,
    *  damit beim Aufsummieren keine Rundungsfehler entstehen. Maximum: MAX_DURATION_SECONDS (3 Std.). */
   durationSeconds: number;
-  difficulty: Difficulty;
+  /** C9: Optional – null = „ohne Angabe“ (z. B. angelegt, während der Schwierigkeitsgrad ausgeschaltet war). */
+  difficulty: Difficulty | null;
   /** C5: Sportart, zu der die Übung gehört (stabile ID aus C1). Wird beim Anlegen automatisch gesetzt. */
   sportId: SportId;
   createdAt: string;

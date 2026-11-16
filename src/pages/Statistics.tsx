@@ -8,6 +8,8 @@ import { computeAverageDuration, computeExerciseUsage } from '../lib/stats';
 import { CATEGORICAL_PALETTE_DARK, CHART_OTHER_COLOR } from '../lib/chartPalette';
 import { formatDuration } from '../lib/time';
 import { useSport } from '../context/SportContext';
+// C9: Schalter „Schwierigkeitsgrad“.
+import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
 
@@ -19,6 +21,9 @@ export function Statistics() {
 
   const beginnerCount = exercises.filter((exercise) => exercise.difficulty === 'Anfänger').length;
   const advancedCount = exercises.filter((exercise) => exercise.difficulty === 'Fortgeschritten').length;
+  // C9: Übungen ohne Schwierigkeitsgrad werden getrennt gezählt statt falsch eingeordnet.
+  const unratedCount = exercises.filter((exercise) => exercise.difficulty === null).length;
+  const { features } = useTrainerFeatures();
 
   const averageDuration = useMemo(() => computeAverageDuration(plans, exercises), [plans, exercises]);
 
@@ -64,7 +69,10 @@ export function Statistics() {
         />
       </div>
 
-      <DifficultyBreakdown beginner={beginnerCount} advanced={advancedCount} />
+      {/* C9: Abschnitt nur bei eingeschalteter Trainer-Funktion „Schwierigkeitsgrad“. */}
+      {features.difficulty && (
+        <DifficultyBreakdown beginner={beginnerCount} advanced={advancedCount} unrated={unratedCount} />
+      )}
 
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <h2 className="font-display text-lg font-bold text-ink">Meist genutzte Übungen</h2>
@@ -83,10 +91,12 @@ export function Statistics() {
   );
 }
 
-function DifficultyBreakdown({ beginner, advanced }: { beginner: number; advanced: number }) {
-  const total = beginner + advanced;
+// C9: Dritter Anteil „Ohne Angabe“ (gestrichelt/dunkel, damit er sich von den beiden Stufen abhebt).
+function DifficultyBreakdown({ beginner, advanced, unrated }: { beginner: number; advanced: number; unrated: number }) {
+  const total = beginner + advanced + unrated;
   const beginnerPct = total === 0 ? 0 : (beginner / total) * 100;
   const advancedPct = total === 0 ? 0 : (advanced / total) * 100;
+  const unratedPct = total === 0 ? 0 : (unrated / total) * 100;
 
   return (
     <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
@@ -102,6 +112,8 @@ function DifficultyBreakdown({ beginner, advanced }: { beginner: number; advance
               className="h-full bg-gradient-to-r from-primary to-primary-dark"
               style={{ width: `${advancedPct}%` }}
             />
+            {unrated > 0 && beginner + advanced > 0 && <div className="h-full w-[3px] bg-bg-soft" />}
+            {unrated > 0 && <div className="h-full bg-surface-2" style={{ width: `${unratedPct}%` }} />}
           </div>
           <div className="flex flex-wrap gap-x-6 gap-y-2 text-sm">
             <span className="inline-flex items-center gap-2 text-muted">
@@ -111,6 +123,11 @@ function DifficultyBreakdown({ beginner, advanced }: { beginner: number; advance
               <span className="h-2.5 w-2.5 rounded-full bg-gradient-to-br from-primary to-primary-dark" />{' '}
               Fortgeschritten · {advanced}
             </span>
+            {unrated > 0 && (
+              <span className="inline-flex items-center gap-2 text-muted">
+                <span className="h-2.5 w-2.5 rounded-full border border-muted-2 bg-surface-2" /> Ohne Angabe · {unrated}
+              </span>
+            )}
           </div>
         </>
       )}

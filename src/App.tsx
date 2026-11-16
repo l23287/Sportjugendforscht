@@ -1,6 +1,8 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppDataProvider } from './context/AppDataContext';
 import { SportProvider } from './context/SportContext';
+// C9: Trainer-Funktionen (app-weit).
+import { TrainerFeaturesProvider } from './context/TrainerFeaturesContext';
 import { AppShell } from './components/AppShell';
 import { Disclaimer } from './components/Disclaimer';
 import { SiteGate } from './components/SiteGate';
@@ -25,6 +27,8 @@ export default function App() {
     <SportProvider>
       <SiteGate>
         <AppDataProvider>
+          {/* C9: Schalter für Zielgruppe/Schwierigkeitsgrad – für alle Seiten verfügbar. */}
+          <TrainerFeaturesProvider>
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
@@ -59,6 +63,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
+          </TrainerFeaturesProvider>
         </AppDataProvider>
       </SiteGate>
       <Disclaimer />

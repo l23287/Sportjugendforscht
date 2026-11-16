@@ -7,6 +7,8 @@ import { inputClass, labelClass, selectClass, textareaClass } from '../lib/formS
 import { DEFAULT_DURATION_SECONDS, parseDurationInput, splitSeconds } from '../lib/time';
 import { DIFFICULTIES } from '../types';
 import type { Difficulty, Exercise, ExerciseInput } from '../types';
+// C9: Schalter „Schwierigkeitsgrad“.
+import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 
 interface ExerciseFormModalProps {
   open: boolean;
@@ -22,7 +24,9 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
   // C4: Zwei Felder (Min. / Sek.) statt einem Minutenfeld. Als Text gespeichert, damit ein Feld auch leer sein darf.
   const [durationMin, setDurationMin] = useState('15');
   const [durationSec, setDurationSec] = useState('00');
-  const [difficulty, setDifficulty] = useState<Difficulty>('Anfänger');
+  // C9: null = „ohne Angabe“.
+  const [difficulty, setDifficulty] = useState<Difficulty | null>('Anfänger');
+  const { features } = useTrainerFeatures();
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -34,9 +38,12 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
     const { hours, minutes, seconds } = splitSeconds(exercise?.durationSeconds ?? DEFAULT_DURATION_SECONDS);
     setDurationMin(String(hours * 60 + minutes));
     setDurationSec(String(seconds).padStart(2, '0'));
-    setDifficulty(exercise?.difficulty ?? 'Anfänger');
+    // C9: Bearbeiten → gespeicherten Wert behalten (auch wenn ausgeblendet, damit nichts verloren geht).
+    //     Neue Übung → bei eingeschaltetem Schalter wie bisher „Anfänger“, sonst „ohne Angabe“ (null) –
+    //     kein stilles „Anfänger“, das nach dem Wiedereinschalten falsch wäre.
+    setDifficulty(exercise ? exercise.difficulty : features.difficulty ? 'Anfänger' : null);
     setError('');
-  }, [open, exercise]);
+  }, [open, exercise, features.difficulty]);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -101,8 +108,9 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
             placeholder="z. B. Schlagpräzision"
           />
         </div>
-        {/* C4: Am Handy untereinander (Dauer braucht zwei Felder), ab sm wie bisher nebeneinander. */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        {/* C4: Am Handy untereinander (Dauer braucht zwei Felder), ab sm wie bisher nebeneinander.
+            C9: Ohne Schwierigkeitsgrad nimmt „Dauer“ die ganze Zeile ein (keine leere Spalte). */}
+        <div className={`grid grid-cols-1 gap-4 ${features.difficulty ? 'sm:grid-cols-2' : ''}`}>
           {/* C4: Dauer als zwei Felder „Min.“ und „Sek.“ – Zahlentastatur am Handy (inputMode="numeric").
               Eingaben werden bewusst NICHT still bereinigt: „1,5“ würde sonst unbemerkt zu „15“ Minuten.
               Ungültige Zeichen meldet stattdessen parseDurationInput beim Speichern. */}
@@ -150,23 +158,27 @@ export function ExerciseFormModal({ open, exercise, onClose, onSubmit }: Exercis
               </div>
             </div>
           </fieldset>
-          <div>
-            <label className={labelClass} htmlFor="exercise-difficulty">
-              Schwierigkeitsgrad
-            </label>
-            <select
-              id="exercise-difficulty"
-              className={selectClass}
-              value={difficulty}
-              onChange={(event) => setDifficulty(event.target.value as Difficulty)}
-            >
-              {DIFFICULTIES.map((level) => (
-                <option key={level} value={level}>
-                  {level}
-                </option>
-              ))}
-            </select>
-          </div>
+          {/* C9: Nur bei eingeschalteter Trainer-Funktion; zusätzlich Option „Ohne Angabe“. */}
+          {features.difficulty && (
+            <div>
+              <label className={labelClass} htmlFor="exercise-difficulty">
+                Schwierigkeitsgrad
+              </label>
+              <select
+                id="exercise-difficulty"
+                className={selectClass}
+                value={difficulty ?? ''}
+                onChange={(event) => setDifficulty(event.target.value ? (event.target.value as Difficulty) : null)}
+              >
+                <option value="">Ohne Angabe</option>
+                {DIFFICULTIES.map((level) => (
+                  <option key={level} value={level}>
+                    {level}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
 
         {error && <p className="text-sm font-medium text-danger">{error}</p>}

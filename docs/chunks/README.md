@@ -36,7 +36,7 @@ Läuft auf demselben Branch `phase-1` weiter und wird in diesem Ordner dokumenti
 | C7a | Nachbesserung: Trainings auch bei Serien austragen (dieser / folgende / ganze Serie) und wiederherstellen | ✅ umgesetzt | 16.11.2026 | [C7a.md](C7a.md) |
 | C8 | Zielsetzungstool: bis zu drei Kernziele je Sportart auf der Startseite, festgelegt in den Einstellungen | ✅ umgesetzt | 16.11.2026 | [C8.md](C8.md) |
 | C8a | Nachbesserung: Suchleiste auf der Startseite über den Kernzielen | ✅ umgesetzt | 16.11.2026 | [C8a.md](C8a.md) |
-| C9 | Trainer-Funktionen (Zielgruppe, Schwierigkeitsgrad) in den Einstellungen ein-/ausschaltbar | ⏳ offen | – | – |
+| C9 | Trainer-Funktionen (Zielgruppe, Schwierigkeitsgrad) in den Einstellungen ein-/ausschaltbar | ✅ umgesetzt | 16.11.2026 | [C9.md](C9.md) |
 | C10 | Einführung in die App beim ersten Öffnen (mit Claude Design) | ⏳ offen | – | – |
 
 ### Für später vorgemerkt

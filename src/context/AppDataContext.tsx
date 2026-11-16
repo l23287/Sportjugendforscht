@@ -1,4 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+// C9: Gültige Schwierigkeitsgrade für die Migration.
+import { DIFFICULTIES, type Difficulty } from '../types';
 import type {
   CoreGoal,
   Exercise,
@@ -93,6 +95,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       durationSeconds: migrateDurationSeconds({ durationSeconds: exercise.durationSeconds, durationMinutes }),
       // C5: Sportart ergänzen (vor C5 nicht vorhanden → Tischtennis).
       sportId: migrateSportId(exercise.sportId),
+      // C9: Schwierigkeitsgrad ist optional; Unbekanntes → null („ohne Angabe“) statt falscher Einordnung.
+      difficulty: DIFFICULTIES.includes(exercise.difficulty as Difficulty) ? exercise.difficulty : null,
     }));
   });
   const [serveSessions, setServeSessions] = useState<ServeSession[]>(() => loadJSON('serveSessions', []));

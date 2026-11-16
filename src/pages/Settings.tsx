@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 // C8: Kernziele festlegen.
 import { CoreGoalsSettings } from '../components/CoreGoalsSettings';
+// C9: Trainer-Funktionen ein-/ausschalten.
+import { TrainerFeaturesSettings } from '../components/TrainerFeaturesSettings';
 // C1: SportPicker ersetzt die PillSelect-Auswahl (25 Sportarten + eigene).
 import { SportPicker } from '../components/SportPicker';
 import { ImpressumDialog } from '../components/ImpressumDialog';
@@ -26,6 +28,9 @@ export function Settings() {
 
       {/* C8: Kernziele über „Sportart“, weil die Sportart-Auswahl sehr lang ist (Abstimmung im Team). */}
       <CoreGoalsSettings />
+
+      {/* C9: Zwischen „Kernziele“ und „Sportart“, damit die Karte nicht unter der langen Sportart-Liste verschwindet. */}
+      <TrainerFeaturesSettings />
 
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <h2 className="font-display text-lg font-bold text-ink">Sportart</h2>

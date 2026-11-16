@@ -5,6 +5,8 @@ import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-
 import { isDateKey } from '../lib/dateKey';
 // C7: Uhrzeit und Wiederholung.
 import { PillSelect } from '../components/PillSelect';
+// C9: Schalter „Zielgruppe“.
+import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { MAX_WEEK_INTERVAL, WEEKDAY_SHORT, describeRecurrence, nextOccurrence, weekdayOf } from '../lib/recurrence';
 import { todayKey } from '../lib/dateKey';
 import { formatDate } from '../lib/time';
@@ -47,7 +49,10 @@ function PlanFormContent() {
 
   const [name, setName] = useState(editingPlan?.name ?? '');
   const [description, setDescription] = useState(editingPlan?.description ?? '');
+  // C9: Auch bei ausgeschalteter Zielgruppe wird der gespeicherte Wert hier gehalten und beim Speichern unverändert
+  //     mitgeschickt – Ausblenden darf nichts löschen.
   const [targetGroup, setTargetGroup] = useState(editingPlan?.targetGroup ?? '');
+  const { features } = useTrainerFeatures();
   // C6: Neuer Plan aus dem Kalender („Neuer Plan für diesen Tag“) – Datum vorbelegen, sofern gültig.
   const [searchParams] = useSearchParams();
   const presetDate = searchParams.get('datum');
@@ -212,19 +217,22 @@ function PlanFormContent() {
               placeholder="Worum geht es in dieser Einheit?"
             />
           </div>
-          {/* C7: Volle Breite, da Datum in den neuen Abschnitt „Termin“ umgezogen ist. */}
-          <div className="sm:col-span-2">
-            <label className={labelClass} htmlFor="plan-target-group">
-              Zielgruppe
-            </label>
-            <input
-              id="plan-target-group"
-              className={inputClass}
-              value={targetGroup}
-              onChange={(event) => setTargetGroup(event.target.value)}
-              placeholder="z. B. U14, Fortgeschrittene"
-            />
-          </div>
+          {/* C7: Volle Breite, da Datum in den neuen Abschnitt „Termin“ umgezogen ist.
+              C9: Nur bei eingeschalteter Trainer-Funktion „Zielgruppe“. */}
+          {features.targetGroup && (
+            <div className="sm:col-span-2">
+              <label className={labelClass} htmlFor="plan-target-group">
+                Zielgruppe
+              </label>
+              <input
+                id="plan-target-group"
+                className={inputClass}
+                value={targetGroup}
+                onChange={(event) => setTargetGroup(event.target.value)}
+                placeholder="z. B. U14, Fortgeschrittene"
+              />
+            </div>
+          )}
         </section>
 
         {/* C7: Eigener Abschnitt „Termin“ – Datum, Uhrzeit und Wiederholung. Gleicher Kartenstil wie die übrigen

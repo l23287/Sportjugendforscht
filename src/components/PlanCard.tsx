@@ -6,6 +6,8 @@ import { formatDuration } from '../lib/time';
 import { getPlanSchedule } from '../lib/planStatus';
 // C7: Serien-Beschreibung.
 import { describeRecurrence } from '../lib/recurrence';
+// C9: Schalter „Zielgruppe“.
+import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { PlanStatusBadge } from './PlanStatusBadge';
 import { IconButton } from './IconButton';
 
@@ -24,6 +26,7 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
   const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
   // C7: Bei Serien zählt der nächste (bzw. letzte) Termin – nicht das Startdatum.
   const schedule = getPlanSchedule(plan);
+  const { features } = useTrainerFeatures();
   const status = schedule?.status ?? null;
 
   return (
@@ -54,7 +57,8 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
         <span className="inline-flex items-center gap-1">
           <Clock size={14} /> {formatDuration(totalSeconds)}
         </span>
-        {plan.targetGroup && (
+        {/* C9: Zielgruppe nur, wenn die Trainer-Funktion eingeschaltet ist. */}
+        {features.targetGroup && plan.targetGroup && (
           <span className="inline-flex items-center gap-1">
             <Users size={14} /> {plan.targetGroup}
           </span>

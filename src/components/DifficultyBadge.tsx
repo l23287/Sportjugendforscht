@@ -1,6 +1,12 @@
 import type { Difficulty } from '../types';
+// C9: Badge respektiert den Schalter „Schwierigkeitsgrad“ zentral – alle Verwendungsstellen (Übungskarte, Übungspool,
+// ausgewählte Übungen, Plandetail) blenden ihn dadurch automatisch aus.
+import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 
-export function DifficultyBadge({ difficulty }: { difficulty: Difficulty }) {
+// C9: `difficulty` kann null sein („ohne Angabe“) – dann wird kein Badge angezeigt.
+export function DifficultyBadge({ difficulty }: { difficulty: Difficulty | null }) {
+  const { features } = useTrainerFeatures();
+  if (!features.difficulty || !difficulty) return null;
   const isAdvanced = difficulty === 'Fortgeschritten';
   return (
     <span

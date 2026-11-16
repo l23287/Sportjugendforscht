@@ -14,6 +14,8 @@ import { formatDuration } from '../lib/time';
 import { getPlanSchedule } from '../lib/planStatus';
 // C7: Serien-Beschreibung.
 import { describeRecurrence } from '../lib/recurrence';
+// C9: Schalter „Zielgruppe“.
+import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
 import type { Exercise } from '../types';
 
@@ -21,6 +23,7 @@ export function PlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getPlan, getPlanSportId, exercises, deletePlan } = useAppData();
+  const { features } = useTrainerFeatures();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
 
@@ -88,7 +91,8 @@ export function PlanDetail() {
               {describeRecurrence(plan.recurrence, plan.date)}
             </span>
           )}
-          {plan.targetGroup && (
+          {/* C9: Zielgruppe nur, wenn die Trainer-Funktion eingeschaltet ist. */}
+          {features.targetGroup && plan.targetGroup && (
             <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
               <Users size={13} />
               {plan.targetGroup}
