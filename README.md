@@ -16,6 +16,8 @@ bis zur Trainingsdurchführung mit Timer.
 - **Kalender** – Monatsansicht der Pläne der aktiven Sportart; neuen Plan für einen Tag anlegen oder vorhandenen Plan
   auf einen Tag legen (C6). Pläne sind „Heute“, „Ausstehend“ oder „Vergangen“ (C6a). Pläne können eine Uhrzeit haben
   und sich wöchentlich (mit Wochentagen) oder monatlich wiederholen (C7); einzelne Termine lassen sich austragen (C7a).
+- **Kernziele** – bis zu drei Ziele je Sportart (mit optionalem Zieldatum, abhakbar), festgelegt in den Einstellungen
+  und angezeigt auf der Startseite (C8).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
   die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes

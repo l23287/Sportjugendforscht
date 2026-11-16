@@ -242,13 +242,21 @@ export function SportPicker() {
 }
 
 // C5: Text für den Löschdialog, z. B. „„Floorball“ und 3 Pläne und 12 Übungen werden gelöscht.“
-function deleteDescription(sport: Sport, activeSportId: string, counts: { plans: number; exercises: number }): string {
+function deleteDescription(
+  sport: Sport,
+  activeSportId: string,
+  counts: { plans: number; exercises: number; goals: number },
+): string {
   const parts: string[] = [];
   if (counts.plans > 0) parts.push(`${counts.plans} ${counts.plans === 1 ? 'Plan' : 'Pläne'}`);
   if (counts.exercises > 0) parts.push(`${counts.exercises} ${counts.exercises === 1 ? 'Übung' : 'Übungen'}`);
+  // C8: Kernziele werden mitgelöscht und daher mitgenannt.
+  if (counts.goals > 0) parts.push(`${counts.goals} ${counts.goals === 1 ? 'Kernziel' : 'Kernziele'}`);
+  // C8: Aufzählung „A, B und C“ statt „A und B und C“.
+  const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} und ${parts[parts.length - 1]}` : parts[0];
   const main =
     parts.length > 0
-      ? `„${sport.name}“ und ${parts.join(' und ')} werden unwiderruflich gelöscht.`
+      ? `„${sport.name}“ und ${list} werden unwiderruflich gelöscht.`
       : `„${sport.name}“ wird aus deiner Liste entfernt.`;
   const fallback = sport.id === activeSportId ? ' Da sie gerade aktiv ist, wird Tischtennis ausgewählt.' : '';
   return main + fallback;

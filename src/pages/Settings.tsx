@@ -1,4 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLocation } from 'react-router-dom';
+// C8: Kernziele festlegen.
+import { CoreGoalsSettings } from '../components/CoreGoalsSettings';
 // C1: SportPicker ersetzt die PillSelect-Auswahl (25 Sportarten + eigene).
 import { SportPicker } from '../components/SportPicker';
 import { ImpressumDialog } from '../components/ImpressumDialog';
@@ -7,6 +10,12 @@ import { DatenschutzDialog } from '../components/DatenschutzDialog';
 export function Settings() {
   const [impressumOpen, setImpressumOpen] = useState(false);
   const [datenschutzOpen, setDatenschutzOpen] = useState(false);
+  const { hash } = useLocation();
+
+  // C8: Link „Kernziele festlegen/Bearbeiten“ von der Startseite (#kernziele) springt direkt zur Karte.
+  useEffect(() => {
+    if (hash === '#kernziele') document.getElementById('kernziele')?.scrollIntoView({ behavior: 'smooth' });
+  }, [hash]);
 
   return (
     <div className="flex flex-col gap-6">
@@ -14,6 +23,9 @@ export function Settings() {
         <h1 className="font-display text-3xl font-extrabold text-ink">Einstellungen</h1>
         <p className="text-sm text-muted">Passe TrainerPro an deine Bedürfnisse an.</p>
       </header>
+
+      {/* C8: Kernziele über „Sportart“, weil die Sportart-Auswahl sehr lang ist (Abstimmung im Team). */}
+      <CoreGoalsSettings />
 
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <h2 className="font-display text-lg font-bold text-ink">Sportart</h2>

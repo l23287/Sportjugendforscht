@@ -11,6 +11,8 @@ import { useSport } from '../context/SportContext';
 // C6a: Pläne nach Status gruppieren (Heute / Ausstehend / Vergangen / Ohne Datum).
 import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanSchedule, type PlanStatus } from '../lib/planStatus';
 import type { TrainingPlan } from '../types';
+// C8: Kernziele auf der Startseite.
+import { CoreGoalsPanel } from '../components/CoreGoalsPanel';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
 
@@ -64,6 +66,9 @@ export function PlansOverview() {
           </PrimaryButton>
         </div>
       </header>
+
+      {/* C8: Kernziele der aktiven Sportart direkt unter der Begrüßung, vor den Plänen. */}
+      <CoreGoalsPanel />
 
       <SearchInput value={query} onChange={setQuery} placeholder="Pläne durchsuchen…" className="max-w-md" />
 

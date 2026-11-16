@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 import type {
+  CoreGoal,
   Exercise,
   ExerciseInput,
   PlanInput,
@@ -18,6 +19,15 @@ import { useSport } from './SportContext';
 import { migrateSportId } from '../lib/sport';
 // C7: Uhrzeit und Wiederholung defensiv einlesen.
 import { sanitizeRecurrence, sanitizeTime } from '../lib/recurrence';
+// C8: Kernziele.
+import { MAX_CORE_GOALS, cleanGoalText, sanitizeCoreGoals, validateGoalText } from '../lib/coreGoals';
+
+// C8: Ergebnis beim Anlegen/Ändern eines Kernziels (Fehlertext für die UI).
+export type GoalResult = { ok: true } | { ok: false; error: string };
+export interface GoalInput {
+  text: string;
+  dueDate: string | null;
+}
 
 interface AppDataContextValue {
   /** C5: Nur die Pläne der AKTIVEN Sportart. Alle Seiten lesen hierüber und sind so automatisch getrennt. */
@@ -34,8 +44,15 @@ interface AppDataContextValue {
   getExercise: (id: string) => Exercise | undefined;
   /** C5: Sportart eines Plans – auch wenn er zu einer anderen als der aktiven Sportart gehört (für Weiterleitungen). */
   getPlanSportId: (id: string) => SportId | undefined;
-  /** C5: Anzahl Pläne/Übungen einer Sportart (für den Löschdialog eigener Sportarten). */
-  countSportData: (sportId: SportId) => { plans: number; exercises: number };
+  /** C5: Anzahl Pläne/Übungen einer Sportart (für den Löschdialog eigener Sportarten). C8: plus Kernziele. */
+  countSportData: (sportId: SportId) => { plans: number; exercises: number; goals: number };
+  /** C8: Kernziele der AKTIVEN Sportart in ihrer Reihenfolge (höchstens drei). */
+  goals: CoreGoal[];
+  addGoal: (input: GoalInput) => GoalResult;
+  updateGoal: (id: string, input: GoalInput) => GoalResult;
+  toggleGoalAchieved: (id: string) => void;
+  deleteGoal: (id: string) => void;
+  moveGoal: (id: string, direction: -1 | 1) => void;
   /** C5: Löscht alle Pläne und Übungen einer Sportart (beim Löschen einer eigenen Sportart). */
   deleteSportData: (sportId: SportId) => void;
   serveSessions: ServeSession[];
@@ -79,10 +96,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }));
   });
   const [serveSessions, setServeSessions] = useState<ServeSession[]>(() => loadJSON('serveSessions', []));
+  // C8: Alle Kernziele aller Sportarten (Reihenfolge im Array = Reihenfolge je Sportart).
+  const [coreGoals, setCoreGoals] = useState<CoreGoal[]>(() => sanitizeCoreGoals(loadJSON<unknown>('coreGoals', [])));
 
   useEffect(() => saveJSON('plans', plans), [plans]);
   useEffect(() => saveJSON('exercises', exercises), [exercises]);
   useEffect(() => saveJSON('serveSessions', serveSessions), [serveSessions]);
+  useEffect(() => saveJSON('coreGoals', coreGoals), [coreGoals]);
 
   // C5: Zentrale Filterung nach aktiver Sportart – keine Seite muss selbst filtern, keine kann es vergessen.
   const sportPlans = useMemo(() => plans.filter((p) => p.sportId === activeSportId), [plans, activeSportId]);
@@ -90,6 +110,9 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     () => exercises.filter((e) => e.sportId === activeSportId),
     [exercises, activeSportId],
   );
+
+  // C8: Zentrale Filterung wie bei Plänen/Übungen (C5).
+  const sportGoals = useMemo(() => coreGoals.filter((g) => g.sportId === activeSportId), [coreGoals, activeSportId]);
 
   const value = useMemo<AppDataContextValue>(() => {
     // C5: Ein Plan darf nur Übungen seiner eigenen Sportart enthalten (Schutz gegen fremde IDs).
@@ -153,10 +176,55 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       countSportData: (sportId) => ({
         plans: plans.filter((p) => p.sportId === sportId).length,
         exercises: exercises.filter((e) => e.sportId === sportId).length,
+        goals: coreGoals.filter((g) => g.sportId === sportId).length,
       }),
       deleteSportData: (sportId) => {
         setPlans((prev) => prev.filter((p) => p.sportId !== sportId));
         setExercises((prev) => prev.filter((e) => e.sportId !== sportId));
+        // C8: Kernziele einer gelöschten eigenen Sportart werden mitgelöscht.
+        setCoreGoals((prev) => prev.filter((g) => g.sportId !== sportId));
+      },
+      // C8: Kernziele – immer nur innerhalb der aktiven Sportart.
+      goals: sportGoals,
+      addGoal: (input) => {
+        if (sportGoals.length >= MAX_CORE_GOALS) return { ok: false, error: `Es sind höchstens ${MAX_CORE_GOALS} Kernziele möglich.` };
+        const error = validateGoalText(input.text, sportGoals);
+        if (error) return { ok: false, error };
+        const goal: CoreGoal = {
+          id: generateId(),
+          sportId: activeSportId,
+          text: cleanGoalText(input.text),
+          dueDate: input.dueDate,
+          achieved: false,
+          createdAt: new Date().toISOString(),
+        };
+        setCoreGoals((prev) => [...prev, goal]);
+        return { ok: true };
+      },
+      updateGoal: (id, input) => {
+        const error = validateGoalText(input.text, sportGoals, id);
+        if (error) return { ok: false, error };
+        setCoreGoals((prev) =>
+          prev.map((g) => (g.id === id ? { ...g, text: cleanGoalText(input.text), dueDate: input.dueDate } : g)),
+        );
+        return { ok: true };
+      },
+      toggleGoalAchieved: (id) => {
+        setCoreGoals((prev) => prev.map((g) => (g.id === id ? { ...g, achieved: !g.achieved } : g)));
+      },
+      deleteGoal: (id) => {
+        setCoreGoals((prev) => prev.filter((g) => g.id !== id));
+      },
+      // C8: Reihenfolge innerhalb der Sportart tauschen (Ziel 1 = wichtigstes).
+      moveGoal: (id, direction) => {
+        setCoreGoals((prev) => {
+          const own = prev.filter((g) => g.sportId === activeSportId);
+          const index = own.findIndex((g) => g.id === id);
+          const target = index + direction;
+          if (index < 0 || target < 0 || target >= own.length) return prev;
+          [own[index], own[target]] = [own[target], own[index]];
+          return [...prev.filter((g) => g.sportId !== activeSportId), ...own];
+        });
       },
       serveSessions,
       startServeSession: (goal) => {
@@ -191,7 +259,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setServeSessions((prev) => prev.filter((session) => session.id !== id));
       },
     };
-  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions]);
+  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

@@ -125,3 +125,16 @@ export interface ServeSession extends ServeSessionGoal {
   startedAt: string;
   endedAt: string | null;
 }
+
+// C8: Kernziel – bis zu drei je Sportart, angezeigt auf der Startseite (Trainingspläne), gepflegt in den Einstellungen.
+// Bewusst „Kernziel“ statt „Ziel“, weil „Ziel“ schon bei Übungen und im Aufschlagtraining verwendet wird.
+export interface CoreGoal {
+  id: string;
+  /** C8: Sportart (stabile ID aus C1) – Kernziele sind wie Pläne/Übungen je Sportart getrennt. */
+  sportId: SportId;
+  text: string;
+  /** C8: Optionales Zieldatum „JJJJ-MM-TT“. */
+  dueDate: string | null;
+  achieved: boolean;
+  createdAt: string;
+}
