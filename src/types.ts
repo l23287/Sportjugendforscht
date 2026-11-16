@@ -63,6 +63,7 @@ export type ExerciseInput = Omit<Exercise, 'id' | 'createdAt' | 'sportId'>;
 // C7: Wiederholung eines Plans. Bewusst klein gehalten (Abstimmung im Team): wöchentlich mit Wochentagen
 // und Abstand oder monatlich am selben Tag; Ende „nie“ (until = null) oder an einem Datum.
 // Einzelne Termine auslassen (z. B. Ferien) ist auf später verschoben.
+// C7a: Nachgezogen – ausgelassene Termine stehen in `exceptions`.
 export type RecurrenceFrequency = 'weekly' | 'monthly';
 
 export interface Recurrence {
@@ -73,6 +74,8 @@ export interface Recurrence {
   weekdays: number[];
   /** C7: Letzter möglicher Termin (JJJJ-MM-TT) oder null = endet nie. */
   until: string | null;
+  /** C7a: Ausgetragene Einzeltermine der Serie (JJJJ-MM-TT), z. B. Ferien. Werden bei der Berechnung übersprungen. */
+  exceptions: string[];
 }
 
 export interface TrainingPlan {

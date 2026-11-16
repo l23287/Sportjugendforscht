@@ -33,10 +33,11 @@ Läuft auf demselben Branch `phase-1` weiter und wird in diesem Ordner dokumenti
 | C6 | Kalendertool mit Monatsansicht im Menü | ✅ umgesetzt | 16.11.2026 | [C6.md](C6.md) |
 | C6a | Nachbesserung: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“, Kalender nach „Übungen“, Tage ohne Rahmen | ✅ umgesetzt | 16.11.2026 | [C6a.md](C6a.md) |
 | C7 | Wiederkehrende Trainings: Uhrzeit und Wiederholungen (wöchentlich/monatlich) für Pläne, im Kalender sichtbar | ✅ umgesetzt | 16.11.2026 | [C7.md](C7.md) |
+| C7a | Nachbesserung: Trainings auch bei Serien austragen (dieser / folgende / ganze Serie) und wiederherstellen | ✅ umgesetzt | 16.11.2026 | [C7a.md](C7a.md) |
 | C8 | Zielsetzungstool: bis zu drei Kernziele auf der Hauptseite, Einstellung in den Einstellungen | ⏳ offen | – | – |
 | C9 | Trainer-Funktionen (Zielgruppe, Schwierigkeitsgrad) in den Einstellungen ein-/ausschaltbar | ⏳ offen | – | – |
 | C10 | Einführung in die App beim ersten Öffnen (mit Claude Design) | ⏳ offen | – | – |
 
 ### Für später vorgemerkt
 
-- Einzelne Termine einer Serie auslassen (z. B. Ferien) – aus C7 verschoben (Abstimmung im Team).
+- ~~Einzelne Termine einer Serie auslassen (z. B. Ferien) – aus C7 verschoben~~ → erledigt in [C7a](C7a.md).

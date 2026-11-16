@@ -30,16 +30,18 @@ export function daysBetween(a: DateKey, b: DateKey): number {
 /** C7: Gespeicherte Regel defensiv einlesen (localStorage kann veraltet oder manipuliert sein). */
 export function sanitizeRecurrence(value: unknown): Recurrence | null {
   if (!value || typeof value !== 'object') return null;
-  const { freq, interval, weekdays, until } = value as Partial<Recurrence>;
+  const { freq, interval, weekdays, until, exceptions } = value as Partial<Recurrence>;
   if (freq !== 'weekly' && freq !== 'monthly') return null;
   const cleanUntil = isDateKey(until) ? until : null;
-  if (freq === 'monthly') return { freq, interval: 1, weekdays: [], until: cleanUntil };
+  // C7a: Ausgetragene Termine – nur gültige Daten, ohne Doppelte, sortiert (Regeln vor C7a haben keine → []).
+  const cleanExceptions = Array.isArray(exceptions) ? [...new Set(exceptions.filter(isDateKey))].sort() : [];
+  if (freq === 'monthly') return { freq, interval: 1, weekdays: [], until: cleanUntil, exceptions: cleanExceptions };
   const days = Array.isArray(weekdays)
     ? [...new Set(weekdays.filter((d): d is number => Number.isInteger(d) && d >= 0 && d <= 6))].sort()
     : [];
   if (days.length === 0) return null;
   const cleanInterval = Number.isInteger(interval) && interval! >= 1 ? Math.min(interval!, MAX_WEEK_INTERVAL) : 1;
-  return { freq, interval: cleanInterval, weekdays: days, until: cleanUntil };
+  return { freq, interval: cleanInterval, weekdays: days, until: cleanUntil, exceptions: cleanExceptions };
 }
 
 /** C7: Uhrzeit „HH:MM“ prüfen. */
@@ -101,7 +103,21 @@ export function occurrencesInRange(
       }
     }
   }
-  return result;
+  // C7a: Ausgetragene Termine überspringen. Dadurch berücksichtigen auch nächster/letzter Termin und der Status
+  // automatisch die Ausnahmen.
+  if (rule.exceptions.length === 0) return result;
+  const skipped = new Set(rule.exceptions);
+  return result.filter((day) => !skipped.has(day));
+}
+
+/** C7a: Ergänzt einen ausgetragenen Termin (ohne Doppelte, sortiert). */
+export function withException(rule: Recurrence, day: DateKey): Recurrence {
+  return { ...rule, exceptions: [...new Set([...rule.exceptions, day])].sort() };
+}
+
+/** C7a: Entfernt einen ausgetragenen Termin wieder (= Termin wiederherstellen). */
+export function withoutException(rule: Recurrence, day: DateKey): Recurrence {
+  return { ...rule, exceptions: rule.exceptions.filter((d) => d !== day) };
 }
 
 /** C7: Nächster Termin ab (einschließlich) `fromKey` – Suche begrenzt auf gut zwei Jahre. */

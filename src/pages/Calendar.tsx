@@ -2,11 +2,12 @@
 // Termine sind die Pläne der aktiven Sportart an ihrem Datum (`plan.date`) – keine zweite Terminliste,
 // damit Kalender und Plan nie voneinander abweichen. Planen im Kalender: neuen Plan für einen Tag anlegen
 // oder einen vorhandenen Plan auf den Tag legen (Abstimmung im Team).
+// C7a: Termine von Serien austragen (nur dieser / dieser und folgende / ganze Serie) und wiederherstellen.
 // C7: Uhrzeit vor dem Plannamen, Serien-Termine (Wiederholungen) und passende Aktionen für Serien.
 // C6a: Neues Design – Tage nur als Zahlen ohne Kästchen/Rahmen; Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarPlus, CalendarX, ChevronLeft, ChevronRight, ClipboardList, Clock, MoveRight, Pencil, Repeat } from 'lucide-react';
+import { CalendarPlus, CalendarX, ChevronLeft, ChevronRight, ClipboardList, Clock, MoveRight, Pencil, Repeat, Undo2 } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { useSport } from '../context/SportContext';
 import { IconButton } from '../components/IconButton';
@@ -27,7 +28,8 @@ import { formatDate, formatDuration } from '../lib/time';
 import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanStatus } from '../lib/planStatus';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
 // C7: Wiederholungen.
-import { describeRecurrence, weekdayOf } from '../lib/recurrence';
+import { addDays, describeRecurrence, weekdayOf, withException, withoutException } from '../lib/recurrence';
+import type { Recurrence } from '../types';
 import type { Exercise, TrainingPlan } from '../types';
 
 export function Calendar() {
@@ -42,6 +44,8 @@ export function Calendar() {
   });
   const [selectedKey, setSelectedKey] = useState<DateKey>(today);
   const [assignOpen, setAssignOpen] = useState(false);
+  // C7a: Serie, deren Termin gerade ausgetragen werden soll (öffnet den Auswahldialog).
+  const [removeTarget, setRemoveTarget] = useState<TrainingPlan | null>(null);
 
   const grid = useMemo(() => getMonthGrid(view.year, view.month), [view]);
   // C6: Termine für das gesamte sichtbare Raster (inkl. angedeuteter Tage aus Vor-/Folgemonat).
@@ -52,6 +56,12 @@ export function Calendar() {
   // C6: Der gewählte Tag kann außerhalb des Rasters liegen (z. B. nach dem Blättern) – eigene Abfrage.
   const selectedPlans = useMemo(
     () => getCalendarEntries(plans, selectedKey, selectedKey).get(selectedKey) ?? [],
+    [plans, selectedKey],
+  );
+
+  // C7a: Am gewählten Tag ausgetragene Serien-Termine – werden gedimmt mit „Wiederherstellen“ angezeigt.
+  const skippedPlans = useMemo(
+    () => plans.filter((plan) => plan.recurrence?.exceptions.includes(selectedKey)),
     [plans, selectedKey],
   );
 
@@ -74,12 +84,18 @@ export function Calendar() {
   // C7: Bei Serien setzt „hierher legen“ den STARTTERMIN neu. Bei wöchentlichen Serien wird der Wochentag des
   //     gewählten Tages ergänzt, falls er fehlt – sonst läge auf dem gewählten Tag gar kein Termin.
   //     „Datum entfernen“ gibt es nur für Einzeltermine (bei Serien: „Serie bearbeiten“).
+  // C7a: Bei Serien gibt es „Austragen“ jetzt auch – mit Auswahl im Dialog (siehe removeOccurrence).
   function setPlanDate(plan: TrainingPlan, date: DateKey | null) {
     let recurrence = date ? plan.recurrence : null;
     if (date && recurrence?.freq === 'weekly' && !recurrence.weekdays.includes(weekdayOf(date))) {
       recurrence = { ...recurrence, weekdays: [...recurrence.weekdays, weekdayOf(date)].sort() };
     }
     if (date && recurrence?.until && recurrence.until < date) recurrence = { ...recurrence, until: null };
+    savePlan(plan, date, recurrence);
+  }
+
+  // C7a: Gemeinsamer Speicherweg für Datum/Regel (alle übrigen Planfelder bleiben unverändert).
+  function savePlan(plan: TrainingPlan, date: DateKey | null, recurrence: Recurrence | null) {
     updatePlan(plan.id, {
       name: plan.name,
       description: plan.description,
@@ -91,9 +107,23 @@ export function Calendar() {
     });
   }
 
+  // C7a: Termin einer Serie austragen.
+  //   'single'    → nur dieser Termin (wird als Ausnahme gespeichert, wiederherstellbar)
+  //   'following' → dieser und alle folgenden (Serie endet am Vortag; liegt das vor dem Start, wird alles ausgetragen)
+  //   'all'       → ganze Serie (Plan behält Inhalt, hat danach weder Datum noch Wiederholung)
+  function removeOccurrence(plan: TrainingPlan, day: DateKey, scope: 'single' | 'following' | 'all') {
+    const rule = plan.recurrence;
+    if (!rule || scope === 'all') return savePlan(plan, null, null);
+    if (scope === 'single') return savePlan(plan, plan.date, withException(rule, day));
+    const lastDay = addDays(day, -1);
+    if (!plan.date || lastDay < plan.date) return savePlan(plan, null, null);
+    savePlan(plan, plan.date, { ...rule, until: rule.until && rule.until < lastDay ? rule.until : lastDay });
+  }
+
   // C7: Pläne, die am gewählten Tag ohnehin einen Termin haben, stehen nicht zur Auswahl.
+  // C7a: Ebenso Serien, deren Termin hier ausgetragen ist – die werden direkt am Tag wiederhergestellt.
   const assignablePlans = plans
-    .filter((plan) => !selectedPlans.some((p) => p.id === plan.id))
+    .filter((plan) => !selectedPlans.some((p) => p.id === plan.id) && !skippedPlans.some((p) => p.id === plan.id))
     .sort((a, b) => a.name.localeCompare(b.name, 'de'));
 
   return (
@@ -172,7 +202,7 @@ export function Calendar() {
             <h2 className="font-display text-lg font-bold text-ink">{formatLongDay(selectedKey)}</h2>
           </div>
 
-          {selectedPlans.length === 0 ? (
+          {selectedPlans.length === 0 && skippedPlans.length === 0 ? (
             <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
               Kein Training geplant.
             </p>
@@ -184,9 +214,31 @@ export function Calendar() {
                   plan={plan}
                   dayKey={selectedKey}
                   exercises={exercises}
-                  onUnschedule={() => setPlanDate(plan, null)}
+                  onUnschedule={() => (plan.recurrence ? setRemoveTarget(plan) : setPlanDate(plan, null))}
                   onEditSeries={() => navigate(`/plaene/${plan.id}/bearbeiten`)}
                 />
+              ))}
+              {/* C7a: Ausgetragene Serien-Termine – gedimmt, durchgestrichen, mit „Wiederherstellen“. */}
+              {skippedPlans.map((plan) => (
+                <li
+                  key={`skipped-${plan.id}`}
+                  className="flex items-center gap-3 rounded-2xl border border-dashed border-border p-3"
+                >
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate font-semibold text-muted line-through decoration-muted-2">
+                      {plan.time && <span className="mr-1.5 tabular-nums">{plan.time}</span>}
+                      {plan.name}
+                    </span>
+                    <span className="mt-1 flex items-center gap-1 text-xs text-muted-2">
+                      <CalendarX size={12} aria-hidden="true" /> Ausgetragen
+                    </span>
+                  </span>
+                  <IconButton
+                    icon={<Undo2 size={16} />}
+                    label={`Termin von „${plan.name}“ wiederherstellen`}
+                    onClick={() => plan.recurrence && savePlan(plan, plan.date, withoutException(plan.recurrence, selectedKey))}
+                  />
+                </li>
               ))}
             </ul>
           )}
@@ -251,6 +303,45 @@ export function Calendar() {
               </li>
             ))}
           </ul>
+        )}
+      </Modal>
+
+      {/* C7a: Austragen bei Serien – Auswahl wie in gängigen Kalender-Apps. Gleicher Dialog-Rahmen (Modal) und
+          Listen-Buttons wie „Plan hierher legen“, damit beide Kalender-Dialoge zusammenpassen. */}
+      <Modal open={removeTarget !== null} title="Training austragen" onClose={() => setRemoveTarget(null)}>
+        {removeTarget && (
+          <>
+            <p className="mb-4 text-sm text-muted">
+              „{removeTarget.name}“ ist ein wiederkehrendes Training. Was soll ab {formatLongDay(selectedKey)} ausgetragen
+              werden?
+            </p>
+            <ul className="flex flex-col gap-2">
+              {(
+                [
+                  ['single', 'Nur diesen Termin', 'Die Serie läuft weiter. Wiederherstellen ist jederzeit möglich.'],
+                  ['following', 'Diesen und alle folgenden', 'Die Serie endet am Vortag.'],
+                  ['all', 'Ganze Serie', 'Der Plan bleibt erhalten, hat aber keinen Termin mehr.'],
+                ] as const
+              ).map(([scope, title, hint]) => (
+                <li key={scope}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      removeOccurrence(removeTarget, selectedKey, scope);
+                      setRemoveTarget(null);
+                    }}
+                    className="flex w-full items-center gap-3 rounded-2xl border border-border bg-bg-soft px-4 py-3 text-left transition hover:border-primary"
+                  >
+                    <CalendarX size={18} className="shrink-0 text-muted-2" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block font-semibold text-ink">{title}</span>
+                      <span className="block text-xs text-muted-2">{hint}</span>
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
       </Modal>
     </div>
@@ -384,11 +475,15 @@ function PlanRow({
           </span>
         )}
       </Link>
-      {plan.recurrence ? (
+      {/* C7a: Bei Serien zusätzlich „Austragen“ (öffnet die Auswahl), daneben weiterhin „Serie bearbeiten“. */}
+      {plan.recurrence && (
         <IconButton icon={<Pencil size={16} />} label={`Serie „${plan.name}“ bearbeiten`} onClick={onEditSeries} />
-      ) : (
-        <IconButton icon={<CalendarX size={16} />} label={`Datum von „${plan.name}“ entfernen`} onClick={onUnschedule} />
       )}
+      <IconButton
+        icon={<CalendarX size={16} />}
+        label={plan.recurrence ? `Termin von „${plan.name}“ austragen` : `Datum von „${plan.name}“ entfernen`}
+        onClick={onUnschedule}
+      />
     </li>
   );
 }

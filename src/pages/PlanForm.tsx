@@ -15,7 +15,7 @@ type RepeatOption = 'Keine' | 'Wöchentlich' | 'Monatlich';
 const REPEAT_OPTIONS: RepeatOption[] = ['Keine', 'Wöchentlich', 'Monatlich'];
 type EndOption = 'Nie' | 'Am Datum';
 const END_OPTIONS: EndOption[] = ['Nie', 'Am Datum'];
-import { ArrowDown, ArrowUp, Check, ChevronLeft, Plus, Repeat, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CalendarX, Check, ChevronLeft, Plus, Repeat, Undo2, X } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { IconButton } from '../components/IconButton';
@@ -64,6 +64,8 @@ function PlanFormContent() {
   const [weekInterval, setWeekInterval] = useState(initialRule?.interval ?? 1);
   const [endOption, setEndOption] = useState<EndOption>(initialRule?.until ? 'Am Datum' : 'Nie');
   const [until, setUntil] = useState(initialRule?.until ?? '');
+  // C7a: Ausgetragene Termine der Serie – bleiben beim Bearbeiten erhalten und lassen sich hier wiederherstellen.
+  const [exceptions, setExceptions] = useState<string[]>(initialRule?.exceptions ?? []);
   const [exerciseIds, setExerciseIds] = useState<string[]>(editingPlan?.exerciseIds ?? []);
   const [poolQuery, setPoolQuery] = useState('');
   const [error, setError] = useState('');
@@ -102,6 +104,7 @@ function PlanFormContent() {
           interval: repeat === 'Wöchentlich' ? weekInterval : 1,
           weekdays: repeat === 'Wöchentlich' ? weekdays : [],
           until: endOption === 'Am Datum' && isDateKey(until) ? until : null,
+          exceptions,
         };
   // C7: Vorschau „Ergibt: …“ inkl. nächstem Termin, damit die Regel vor dem Speichern nachvollziehbar ist.
   const previewNext =
@@ -326,6 +329,32 @@ function PlanFormContent() {
                   />
                 </div>
               )}
+            </div>
+          )}
+
+          {/* C7a: Ausgetragene Termine als Chips (Stil der Info-Chips); ✕ stellt einen Termin wieder her. */}
+          {repeat !== 'Keine' && exceptions.length > 0 && (
+            <div>
+              <p className={labelClass}>Ausgetragene Termine</p>
+              <ul className="flex flex-wrap gap-2">
+                {exceptions.map((day) => (
+                  <li key={day}>
+                    <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 py-1 pl-3 pr-1 text-xs font-semibold text-muted">
+                      <CalendarX size={13} aria-hidden="true" />
+                      <span className="line-through decoration-muted-2">{formatDate(day)}</span>
+                      <button
+                        type="button"
+                        onClick={() => setExceptions((prev) => prev.filter((d) => d !== day))}
+                        aria-label={`Termin am ${formatDate(day)} wiederherstellen`}
+                        title="Wiederherstellen"
+                        className="flex h-6 w-6 items-center justify-center rounded-xl transition hover:bg-black/20 hover:text-ink"
+                      >
+                        <Undo2 size={13} />
+                      </button>
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           )}
 
