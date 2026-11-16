@@ -3,13 +3,25 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 // C6: Datum aus dem Kalender übernehmen (?datum=JJJJ-MM-TT).
 import { isDateKey } from '../lib/dateKey';
-import { ArrowDown, ArrowUp, Check, ChevronLeft, Plus, X } from 'lucide-react';
+// C7: Uhrzeit und Wiederholung.
+import { PillSelect } from '../components/PillSelect';
+import { MAX_WEEK_INTERVAL, WEEKDAY_SHORT, describeRecurrence, nextOccurrence, weekdayOf } from '../lib/recurrence';
+import { todayKey } from '../lib/dateKey';
+import { formatDate } from '../lib/time';
+import type { Recurrence } from '../types';
+
+// C7: Auswahlwerte für die Pill-Buttons (gleiche Komponente wie Aufschlagtraining/Einstellungen).
+type RepeatOption = 'Keine' | 'Wöchentlich' | 'Monatlich';
+const REPEAT_OPTIONS: RepeatOption[] = ['Keine', 'Wöchentlich', 'Monatlich'];
+type EndOption = 'Nie' | 'Am Datum';
+const END_OPTIONS: EndOption[] = ['Nie', 'Am Datum'];
+import { ArrowDown, ArrowUp, Check, ChevronLeft, Plus, Repeat, X } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { IconButton } from '../components/IconButton';
 import { SearchInput } from '../components/SearchInput';
 import { DifficultyBadge } from '../components/DifficultyBadge';
-import { inputClass, labelClass, textareaClass } from '../lib/formStyles';
+import { inputClass, labelClass, selectClass, textareaClass } from '../lib/formStyles';
 import { formatDuration } from '../lib/time';
 import type { Exercise, PlanInput } from '../types';
 
@@ -42,6 +54,16 @@ function PlanFormContent() {
   const [date, setDate] = useState(editingPlan?.date ?? (isDateKey(presetDate) ? presetDate : ''));
   // C6: Aus dem Kalender gekommen → „Zurück“/„Abbrechen“ führt wieder in den Kalender.
   const backTarget = editingPlan ? `/plaene/${editingPlan.id}` : isDateKey(presetDate) ? '/kalender' : '/plaene';
+  // C7: Uhrzeit und Wiederholung (Formularzustand; gespeichert wird eine Recurrence oder null).
+  const [time, setTime] = useState(editingPlan?.time ?? '');
+  const initialRule = editingPlan?.recurrence ?? null;
+  const [repeat, setRepeat] = useState<RepeatOption>(
+    initialRule?.freq === 'weekly' ? 'Wöchentlich' : initialRule?.freq === 'monthly' ? 'Monatlich' : 'Keine',
+  );
+  const [weekdays, setWeekdays] = useState<number[]>(initialRule?.weekdays ?? []);
+  const [weekInterval, setWeekInterval] = useState(initialRule?.interval ?? 1);
+  const [endOption, setEndOption] = useState<EndOption>(initialRule?.until ? 'Am Datum' : 'Nie');
+  const [until, setUntil] = useState(initialRule?.until ?? '');
   const [exerciseIds, setExerciseIds] = useState<string[]>(editingPlan?.exerciseIds ?? []);
   const [poolQuery, setPoolQuery] = useState('');
   const [error, setError] = useState('');
@@ -60,6 +82,32 @@ function PlanFormContent() {
       .filter((exercise) => !exerciseIds.includes(exercise.id))
       .filter((exercise) => !q || exercise.name.toLowerCase().includes(q));
   }, [exercises, exerciseIds, poolQuery]);
+
+  // C7: Wiederholung wählen – bei „Wöchentlich“ ohne Tage den Wochentag des Startdatums vorschlagen.
+  function changeRepeat(option: RepeatOption) {
+    setRepeat(option);
+    if (option === 'Wöchentlich' && weekdays.length === 0 && isDateKey(date)) setWeekdays([weekdayOf(date)]);
+  }
+
+  function toggleWeekday(day: number) {
+    setWeekdays((prev) => (prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day].sort()));
+  }
+
+  // C7: Aktuelle Regel aus dem Formular (ohne Prüfung) – für Vorschau und Speichern.
+  const draftRule: Recurrence | null =
+    repeat === 'Keine'
+      ? null
+      : {
+          freq: repeat === 'Wöchentlich' ? 'weekly' : 'monthly',
+          interval: repeat === 'Wöchentlich' ? weekInterval : 1,
+          weekdays: repeat === 'Wöchentlich' ? weekdays : [],
+          until: endOption === 'Am Datum' && isDateKey(until) ? until : null,
+        };
+  // C7: Vorschau „Ergibt: …“ inkl. nächstem Termin, damit die Regel vor dem Speichern nachvollziehbar ist.
+  const previewNext =
+    draftRule && isDateKey(date) && (draftRule.freq === 'monthly' || draftRule.weekdays.length > 0)
+      ? nextOccurrence({ date, recurrence: draftRule }, todayKey())
+      : null;
 
   function addExerciseToPlan(exerciseId: string) {
     setExerciseIds((prev) => [...prev, exerciseId]);
@@ -85,12 +133,34 @@ function PlanFormContent() {
       setError('Bitte gib einen Namen für den Plan ein.');
       return;
     }
+    // C7: Prüfregeln für Wiederholungen.
+    if (draftRule) {
+      if (!isDateKey(date)) {
+        setError('Für eine Wiederholung brauchst du ein Startdatum.');
+        return;
+      }
+      if (draftRule.freq === 'weekly' && draftRule.weekdays.length === 0) {
+        setError('Bitte wähle mindestens einen Wochentag.');
+        return;
+      }
+      if (endOption === 'Am Datum' && !isDateKey(until)) {
+        setError('Bitte gib ein Enddatum für die Wiederholung an.');
+        return;
+      }
+      if (draftRule.until && draftRule.until < date) {
+        setError('Das Enddatum darf nicht vor dem Startdatum liegen.');
+        return;
+      }
+    }
     const input: PlanInput = {
       name: name.trim(),
       description: description.trim(),
       targetGroup: targetGroup.trim(),
       date: date || null,
       exerciseIds,
+      // C7: Uhrzeit und Wiederholung speichern.
+      time: time || null,
+      recurrence: draftRule,
     };
     if (editingPlan) {
       updatePlan(editingPlan.id, input);
@@ -110,7 +180,9 @@ function PlanFormContent() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* C7: noValidate – sonst blockiert die Browser-Prüfung (z. B. min am Enddatum) das Absenden mit einer eigenen
+          Sprechblase, und die einheitlich gestaltete Fehlermeldung der App erscheint nicht (wie C4 im Übungsformular). */}
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
         <section className="grid grid-cols-1 gap-5 rounded-3xl border border-border bg-surface p-5 sm:grid-cols-2">
           <div className="sm:col-span-2">
             <label className={labelClass} htmlFor="plan-name">
@@ -137,7 +209,8 @@ function PlanFormContent() {
               placeholder="Worum geht es in dieser Einheit?"
             />
           </div>
-          <div>
+          {/* C7: Volle Breite, da Datum in den neuen Abschnitt „Termin“ umgezogen ist. */}
+          <div className="sm:col-span-2">
             <label className={labelClass} htmlFor="plan-target-group">
               Zielgruppe
             </label>
@@ -149,18 +222,124 @@ function PlanFormContent() {
               placeholder="z. B. U14, Fortgeschrittene"
             />
           </div>
-          <div>
-            <label className={labelClass} htmlFor="plan-date">
-              Datum (optional)
-            </label>
-            <input
-              id="plan-date"
-              type="date"
-              className={`${inputClass} [color-scheme:dark]`}
-              value={date}
-              onChange={(event) => setDate(event.target.value)}
-            />
+        </section>
+
+        {/* C7: Eigener Abschnitt „Termin“ – Datum, Uhrzeit und Wiederholung. Gleicher Kartenstil wie die übrigen
+            Formularabschnitte; Auswahl über die vorhandenen Pill-Buttons, Felder mit inputClass/selectClass. */}
+        <section aria-labelledby="plan-schedule-title" className="flex flex-col gap-5 rounded-3xl border border-border bg-surface p-5">
+          <h2 id="plan-schedule-title" className="font-display text-lg font-bold text-ink">
+            Termin
+          </h2>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div>
+              <label className={labelClass} htmlFor="plan-date">
+                {/* C7: Bei Wiederholung ist das Datum der erste Termin der Serie. */}
+                {repeat === 'Keine' ? 'Datum (optional)' : 'Startdatum'}
+              </label>
+              <input
+                id="plan-date"
+                type="date"
+                className={`${inputClass} [color-scheme:dark]`}
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
+            </div>
+            <div>
+              <label className={labelClass} htmlFor="plan-time">
+                Uhrzeit (optional)
+              </label>
+              <input
+                id="plan-time"
+                type="time"
+                className={`${inputClass} [color-scheme:dark]`}
+                value={time}
+                onChange={(event) => setTime(event.target.value)}
+              />
+            </div>
           </div>
+
+          <PillSelect label="Wiederholung" options={REPEAT_OPTIONS} value={repeat} onChange={changeRepeat} />
+
+          {repeat === 'Wöchentlich' && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-[1fr_auto]">
+              <div>
+                <p className={labelClass} id="plan-weekdays-label">
+                  Wochentage
+                </p>
+                {/* C7: Mehrfachauswahl im Stil der Pill-Buttons; aria-pressed zeigt den Zustand an. */}
+                <div role="group" aria-labelledby="plan-weekdays-label" className="flex flex-wrap gap-2">
+                  {WEEKDAY_SHORT.map((label, day) => {
+                    const active = weekdays.includes(day);
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        onClick={() => toggleWeekday(day)}
+                        aria-pressed={active}
+                        className={`h-11 w-12 rounded-2xl border text-sm font-semibold transition ${
+                          active
+                            ? 'border-transparent bg-gradient-to-br from-primary to-primary-dark text-white shadow-[0_8px_18px_rgba(37,99,235,0.3)]'
+                            : 'border-border bg-bg-soft text-muted hover:text-ink'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+              <div>
+                <label className={labelClass} htmlFor="plan-interval">
+                  Abstand
+                </label>
+                <select
+                  id="plan-interval"
+                  className={`${selectClass} sm:w-48`}
+                  value={weekInterval}
+                  onChange={(event) => setWeekInterval(Number(event.target.value))}
+                >
+                  {Array.from({ length: MAX_WEEK_INTERVAL }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>
+                      {n === 1 ? 'Jede Woche' : `Alle ${n} Wochen`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+          )}
+
+          {repeat !== 'Keine' && (
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:items-end">
+              <PillSelect label="Endet" options={END_OPTIONS} value={endOption} onChange={setEndOption} />
+              {endOption === 'Am Datum' && (
+                <div>
+                  <label className={labelClass} htmlFor="plan-until">
+                    Letzter möglicher Termin
+                  </label>
+                  <input
+                    id="plan-until"
+                    type="date"
+                    min={isDateKey(date) ? date : undefined}
+                    className={`${inputClass} [color-scheme:dark]`}
+                    value={until}
+                    onChange={(event) => setUntil(event.target.value)}
+                  />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* C7: Zusammenfassung der Regel in Klartext, im Stil der Info-Chips (primary-soft/accent). */}
+          {draftRule && isDateKey(date) && (draftRule.freq === 'monthly' || draftRule.weekdays.length > 0) && (
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-2xl bg-primary-soft px-4 py-3 text-sm text-accent">
+              <Repeat size={16} aria-hidden="true" />
+              <span className="font-semibold">{describeRecurrence(draftRule, date)}</span>
+              {time && <span>· {time} Uhr</span>}
+              <span className="text-muted">
+                {previewNext ? `· nächster Termin ${formatDate(previewNext)}` : '· keine weiteren Termine'}
+              </span>
+            </p>
+          )}
         </section>
 
         <section className="grid grid-cols-1 gap-5 lg:grid-cols-2">

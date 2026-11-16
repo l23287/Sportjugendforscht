@@ -4,6 +4,9 @@
 // Farben, Texte und Reihenfolge liegen NUR hier, damit Plankarte, Plandetail, Pläne-Übersicht und Kalender
 // garantiert gleich aussehen.
 import { isDateKey, todayKey } from './dateKey';
+// C7: Serien-Termine für den Status ganzer Pläne.
+import { lastOccurrenceBefore, nextOccurrence } from './recurrence';
+import type { TrainingPlan } from '../types';
 
 export type PlanStatus = 'heute' | 'ausstehend' | 'vergangen';
 
@@ -58,3 +61,28 @@ export const PLAN_STATUS_META: Record<PlanStatus, PlanStatusMeta> = {
 
 /** C6a: Reihenfolge der Abschnitte in der Pläne-Übersicht. */
 export const PLAN_STATUS_ORDER: PlanStatus[] = ['heute', 'ausstehend', 'vergangen'];
+
+// C7: Status und maßgeblicher Termin eines ganzen Plans – berücksichtigt Serien (Abstimmung im Team):
+//   Heute      = heute ist ein Termin (bei Serien: einer der Termine),
+//   Ausstehend = es kommt noch ein Termin → `date` ist der NÄCHSTE Termin,
+//   Vergangen  = kein Termin mehr (Einzeltermin vorbei bzw. Serie beendet) → `date` ist der LETZTE Termin.
+// Für Pläne ohne Wiederholung ergibt das genau dasselbe wie getPlanStatus(plan.date).
+export interface PlanSchedule {
+  status: PlanStatus;
+  date: string;
+}
+
+export function getPlanSchedule(
+  plan: Pick<TrainingPlan, 'date' | 'recurrence'>,
+  today: string = todayKey(),
+): PlanSchedule | null {
+  if (!plan.date || !isDateKey(plan.date)) return null;
+  if (!plan.recurrence) {
+    const status = getPlanStatus(plan.date, today);
+    return status ? { status, date: plan.date } : null;
+  }
+  const next = nextOccurrence(plan, today);
+  if (next) return { status: next === today ? 'heute' : 'ausstehend', date: next };
+  const last = lastOccurrenceBefore(plan, today);
+  return last ? { status: 'vergangen', date: last } : null;
+}

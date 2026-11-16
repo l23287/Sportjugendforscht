@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // C5: Navigate für die Weiterleitung bei Plänen einer anderen Sportart.
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Dumbbell, Pencil, Play, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, Clock, Dumbbell, Pencil, Play, Repeat, Trash2, Users } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -11,7 +11,9 @@ import { ConfirmDialog } from '../components/ConfirmDialog';
 import { Timer } from '../components/Timer';
 import { formatDuration } from '../lib/time';
 // C6a: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
-import { getPlanStatus } from '../lib/planStatus';
+import { getPlanSchedule } from '../lib/planStatus';
+// C7: Serien-Beschreibung.
+import { describeRecurrence } from '../lib/recurrence';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
 import type { Exercise } from '../types';
 
@@ -50,7 +52,8 @@ export function PlanDetail() {
     .filter((e): e is Exercise => Boolean(e));
   // C4: Summe in Sekunden, erst danach formatieren.
   const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
-  const status = getPlanStatus(plan.date);
+  // C7: Bei Serien zählt der nächste (bzw. letzte) Termin.
+  const schedule = getPlanSchedule(plan);
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -77,7 +80,14 @@ export function PlanDetail() {
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">
           {/* C6a: Status-Badge mit Datum. */}
-          {status && plan.date && <PlanStatusBadge status={status} date={plan.date} />}
+          {schedule && <PlanStatusBadge status={schedule.status} date={schedule.date} time={plan.time} />}
+          {/* C7: Wiederholung als eigener Chip im Stil der übrigen Info-Chips. */}
+          {plan.recurrence && (
+            <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
+              <Repeat size={13} />
+              {describeRecurrence(plan.recurrence, plan.date)}
+            </span>
+          )}
           {plan.targetGroup && (
             <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
               <Users size={13} />

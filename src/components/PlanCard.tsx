@@ -1,9 +1,11 @@
 import { Link } from 'react-router-dom';
-import { ClipboardList, Clock, ListChecks, Pencil, Trash2, Users } from 'lucide-react';
+import { ClipboardList, Clock, ListChecks, Pencil, Repeat, Trash2, Users } from 'lucide-react';
 import type { Exercise, TrainingPlan } from '../types';
 import { formatDuration } from '../lib/time';
 // C6a: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
-import { getPlanStatus } from '../lib/planStatus';
+import { getPlanSchedule } from '../lib/planStatus';
+// C7: Serien-Beschreibung.
+import { describeRecurrence } from '../lib/recurrence';
 import { PlanStatusBadge } from './PlanStatusBadge';
 import { IconButton } from './IconButton';
 
@@ -20,7 +22,9 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
     .filter((e): e is Exercise => Boolean(e));
   // C4: Summe in Sekunden, erst danach formatieren.
   const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
-  const status = getPlanStatus(plan.date);
+  // C7: Bei Serien zählt der nächste (bzw. letzte) Termin – nicht das Startdatum.
+  const schedule = getPlanSchedule(plan);
+  const status = schedule?.status ?? null;
 
   return (
     <div
@@ -34,7 +38,8 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
           <ClipboardList size={22} />
         </div>
         {/* C6a: Status-Badge mit Datum (ersetzt das rote Datum bei überfälligen Plänen). */}
-        {status && plan.date && <PlanStatusBadge status={status} date={plan.date} />}
+        {/* C7: Datum = nächster Termin der Serie, plus Uhrzeit. */}
+        {schedule && <PlanStatusBadge status={schedule.status} date={schedule.date} time={plan.time} />}
       </div>
 
       <div className="min-w-0 flex-1">
@@ -52,6 +57,12 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
         {plan.targetGroup && (
           <span className="inline-flex items-center gap-1">
             <Users size={14} /> {plan.targetGroup}
+          </span>
+        )}
+        {/* C7: Wiederholung in derselben Meta-Zeile wie Übungen/Dauer/Zielgruppe. */}
+        {plan.recurrence && (
+          <span className="inline-flex items-center gap-1">
+            <Repeat size={14} /> {describeRecurrence(plan.recurrence, plan.date)}
           </span>
         )}
       </div>

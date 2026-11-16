@@ -8,9 +8,11 @@ interface PlanStatusBadgeProps {
   status: PlanStatus;
   /** Optional: Datum im Badge anzeigen („Ausstehend · 20.11.2026“). */
   date?: string;
+  /** C7: Optional: Uhrzeit anhängen („Ausstehend · 20.11.2026 · 18:00“). */
+  time?: string | null;
 }
 
-export function PlanStatusBadge({ status, date }: PlanStatusBadgeProps) {
+export function PlanStatusBadge({ status, date, time }: PlanStatusBadgeProps) {
   const meta = PLAN_STATUS_META[status];
   return (
     <span
@@ -19,6 +21,7 @@ export function PlanStatusBadge({ status, date }: PlanStatusBadgeProps) {
       <Calendar size={12} aria-hidden="true" />
       {meta.label}
       {date && <span className="font-medium opacity-90">· {formatDate(date)}</span>}
+      {time && <span className="font-medium tabular-nums opacity-90">· {time}</span>}
     </span>
   );
 }

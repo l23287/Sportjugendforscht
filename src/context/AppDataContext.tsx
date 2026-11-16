@@ -16,6 +16,8 @@ import { migrateDurationSeconds } from '../lib/time';
 // C5: Pläne/Übungen werden nach der aktiven Sportart getrennt.
 import { useSport } from './SportContext';
 import { migrateSportId } from '../lib/sport';
+// C7: Uhrzeit und Wiederholung defensiv einlesen.
+import { sanitizeRecurrence, sanitizeTime } from '../lib/recurrence';
 
 interface AppDataContextValue {
   /** C5: Nur die Pläne der AKTIVEN Sportart. Alle Seiten lesen hierüber und sind so automatisch getrennt. */
@@ -55,7 +57,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
   const [plans, setPlans] = useState<TrainingPlan[]>(() => {
     const stored = loadJSON<unknown>('plans', []);
     if (!Array.isArray(stored)) return [];
-    return (stored as TrainingPlan[]).map((plan) => ({ ...plan, sportId: migrateSportId(plan.sportId) }));
+    return (stored as TrainingPlan[]).map((plan) => ({
+      ...plan,
+      sportId: migrateSportId(plan.sportId),
+      // C7: Pläne vor C7 haben weder Uhrzeit noch Wiederholung → null. Eine Wiederholung ohne Startdatum ist ungültig.
+      time: sanitizeTime(plan.time),
+      recurrence: plan.date ? sanitizeRecurrence(plan.recurrence) : null,
+    }));
   });
   // C4: Beim Laden wird jede Übung auf `durationSeconds` umgestellt; das alte Feld `durationMinutes` entfällt
   // und wird beim nächsten Speichern nicht mehr geschrieben.

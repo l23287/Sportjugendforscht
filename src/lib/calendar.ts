@@ -1,7 +1,9 @@
 // C6: Kalenderlogik (ohne UI) – Monatsraster, Termine je Tag und deutsche Beschriftungen.
 // Bewusst getrennt von der Seite, damit C7 (Uhrzeit + Wiederholungen) nur `getCalendarEntries()` erweitern muss.
 import type { TrainingPlan } from '../types';
-import { isDateKey, parseDateKey, toDateKey, type DateKey } from './dateKey';
+import { parseDateKey, toDateKey, type DateKey } from './dateKey';
+// C7: Termine (inkl. Wiederholungen) berechnen.
+import { occurrencesInRange } from './recurrence';
 
 /** C6: Ein Tag im Monatsraster. */
 export interface CalendarDay {
@@ -32,20 +34,22 @@ export function getMonthGrid(year: number, month: number): CalendarDay[] {
 }
 
 /**
- * C6: Termine im Zeitraum [fromKey, toKey] nach Tag gruppiert. In C6 hat ein Plan höchstens ein Datum (`plan.date`).
- * C7 erweitert diese Funktion um Wiederholungen – die Kalenderseite bleibt dabei unverändert.
+ * C6: Termine im Zeitraum [fromKey, toKey] nach Tag gruppiert.
+ * C7: Ein Plan kann jetzt mehrere Termine haben (Wiederholung) – berechnet über occurrencesInRange().
+ *     Sortierung je Tag: zuerst nach Uhrzeit (Pläne ohne Uhrzeit am Ende), dann nach Name.
  */
 export function getCalendarEntries(plans: TrainingPlan[], fromKey: DateKey, toKey: DateKey): Map<DateKey, TrainingPlan[]> {
   const entries = new Map<DateKey, TrainingPlan[]>();
   for (const plan of plans) {
-    if (!plan.date || !isDateKey(plan.date)) continue;
-    // C6: DateKeys sind als Text sortierbar – Bereichsprüfung ohne Date-Objekte.
-    if (plan.date < fromKey || plan.date > toKey) continue;
-    const list = entries.get(plan.date) ?? [];
-    list.push(plan);
-    entries.set(plan.date, list);
+    for (const day of occurrencesInRange(plan, fromKey, toKey)) {
+      const list = entries.get(day) ?? [];
+      list.push(plan);
+      entries.set(day, list);
+    }
   }
-  for (const list of entries.values()) list.sort((a, b) => a.name.localeCompare(b.name, 'de'));
+  for (const list of entries.values()) {
+    list.sort((a, b) => (a.time ?? '99:99').localeCompare(b.time ?? '99:99') || a.name.localeCompare(b.name, 'de'));
+  }
   return entries;
 }
 

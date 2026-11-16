@@ -9,7 +9,7 @@ import { EmptyState } from '../components/EmptyState';
 import { ConfirmDialog } from '../components/ConfirmDialog';
 import { useSport } from '../context/SportContext';
 // C6a: Pläne nach Status gruppieren (Heute / Ausstehend / Vergangen / Ohne Datum).
-import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanStatus, type PlanStatus } from '../lib/planStatus';
+import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanSchedule, type PlanStatus } from '../lib/planStatus';
 import type { TrainingPlan } from '../types';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
@@ -33,8 +33,14 @@ export function PlansOverview() {
   // „Vergangene Pläne“ (jüngster zuerst) und „Ohne Datum“. Leere Abschnitte werden ausgeblendet.
   const sections = useMemo(() => {
     const groups: Record<PlanStatus | 'ohne', TrainingPlan[]> = { heute: [], ausstehend: [], vergangen: [], ohne: [] };
-    for (const plan of filteredPlans) groups[getPlanStatus(plan.date) ?? 'ohne'].push(plan);
-    const byDate = (a: TrainingPlan, b: TrainingPlan) => (a.date ?? '').localeCompare(b.date ?? '');
+    // C7: Einteilung und Sortierung nach dem maßgeblichen Termin (bei Serien: nächster bzw. letzter Termin)
+    // und innerhalb eines Tages nach Uhrzeit.
+    const scheduleOf = new Map(filteredPlans.map((plan) => [plan.id, getPlanSchedule(plan)]));
+    for (const plan of filteredPlans) groups[scheduleOf.get(plan.id)?.status ?? 'ohne'].push(plan);
+    const sortKey = (plan: TrainingPlan) => `${scheduleOf.get(plan.id)?.date ?? ''} ${plan.time ?? '99:99'}`;
+    const byDate = (a: TrainingPlan, b: TrainingPlan) => sortKey(a).localeCompare(sortKey(b));
+    // C7: Pläne des Tages nach Uhrzeit.
+    groups.heute.sort(byDate);
     groups.ausstehend.sort(byDate);
     groups.vergangen.sort((a, b) => byDate(b, a));
     return [

@@ -2,10 +2,11 @@
 // Termine sind die Pläne der aktiven Sportart an ihrem Datum (`plan.date`) – keine zweite Terminliste,
 // damit Kalender und Plan nie voneinander abweichen. Planen im Kalender: neuen Plan für einen Tag anlegen
 // oder einen vorhandenen Plan auf den Tag legen (Abstimmung im Team).
+// C7: Uhrzeit vor dem Plannamen, Serien-Termine (Wiederholungen) und passende Aktionen für Serien.
 // C6a: Neues Design – Tage nur als Zahlen ohne Kästchen/Rahmen; Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { CalendarPlus, CalendarX, ChevronLeft, ChevronRight, ClipboardList, Clock, MoveRight } from 'lucide-react';
+import { CalendarPlus, CalendarX, ChevronLeft, ChevronRight, ClipboardList, Clock, MoveRight, Pencil, Repeat } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { useSport } from '../context/SportContext';
 import { IconButton } from '../components/IconButton';
@@ -25,6 +26,8 @@ import { formatDate, formatDuration } from '../lib/time';
 // C6a: Plan-Status statt isOverdue().
 import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanStatus } from '../lib/planStatus';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
+// C7: Wiederholungen.
+import { describeRecurrence, weekdayOf } from '../lib/recurrence';
 import type { Exercise, TrainingPlan } from '../types';
 
 export function Calendar() {
@@ -68,18 +71,29 @@ export function Calendar() {
   }
 
   // C6: Datum eines Plans setzen/entfernen. Bis C7 hat ein Plan genau ein Datum – „hierher legen“ verschiebt ihn.
+  // C7: Bei Serien setzt „hierher legen“ den STARTTERMIN neu. Bei wöchentlichen Serien wird der Wochentag des
+  //     gewählten Tages ergänzt, falls er fehlt – sonst läge auf dem gewählten Tag gar kein Termin.
+  //     „Datum entfernen“ gibt es nur für Einzeltermine (bei Serien: „Serie bearbeiten“).
   function setPlanDate(plan: TrainingPlan, date: DateKey | null) {
+    let recurrence = date ? plan.recurrence : null;
+    if (date && recurrence?.freq === 'weekly' && !recurrence.weekdays.includes(weekdayOf(date))) {
+      recurrence = { ...recurrence, weekdays: [...recurrence.weekdays, weekdayOf(date)].sort() };
+    }
+    if (date && recurrence?.until && recurrence.until < date) recurrence = { ...recurrence, until: null };
     updatePlan(plan.id, {
       name: plan.name,
       description: plan.description,
       targetGroup: plan.targetGroup,
       date,
       exerciseIds: plan.exerciseIds,
+      time: plan.time,
+      recurrence,
     });
   }
 
+  // C7: Pläne, die am gewählten Tag ohnehin einen Termin haben, stehen nicht zur Auswahl.
   const assignablePlans = plans
-    .filter((plan) => plan.date !== selectedKey)
+    .filter((plan) => !selectedPlans.some((p) => p.id === plan.id))
     .sort((a, b) => a.name.localeCompare(b.name, 'de'));
 
   return (
@@ -165,7 +179,14 @@ export function Calendar() {
           ) : (
             <ul className="flex flex-col gap-2">
               {selectedPlans.map((plan) => (
-                <PlanRow key={plan.id} plan={plan} exercises={exercises} onUnschedule={() => setPlanDate(plan, null)} />
+                <PlanRow
+                  key={plan.id}
+                  plan={plan}
+                  dayKey={selectedKey}
+                  exercises={exercises}
+                  onUnschedule={() => setPlanDate(plan, null)}
+                  onEditSeries={() => navigate(`/plaene/${plan.id}/bearbeiten`)}
+                />
               ))}
             </ul>
           )}
@@ -193,8 +214,8 @@ export function Calendar() {
       {/* C6: Vorhandenen Plan auf den gewählten Tag legen. */}
       <Modal open={assignOpen} title="Plan hierher legen" onClose={() => setAssignOpen(false)}>
         <p className="mb-4 text-sm text-muted">
-          Wähle einen {sport.name}-Plan für {formatLongDay(selectedKey)}. Ein Plan hat ein Datum – ein bereits
-          geplanter Plan wird auf diesen Tag verschoben.
+          Wähle einen {sport.name}-Plan für {formatLongDay(selectedKey)}. Ein Einzeltermin wird auf diesen Tag
+          verschoben; bei einer Serie beginnt sie neu an diesem Tag.
         </p>
         {assignablePlans.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-border px-4 py-6 text-center text-sm text-muted">
@@ -217,9 +238,12 @@ export function Calendar() {
                     <span className="block truncate font-semibold text-ink">{plan.name}</span>
                     {/* C6a: Bisheriges Datum mit Status statt roter „Überfällig“-Farbe. */}
                     <span className="block text-xs text-muted-2">
-                      {plan.date
-                        ? `Bisher: ${formatDate(plan.date)}${statusSuffix(plan.date)}`
-                        : 'Noch ohne Datum'}
+                      {/* C7: Serien zeigen ihre Regel statt eines einzelnen Datums. */}
+                      {plan.recurrence
+                        ? `Serie: ${describeRecurrence(plan.recurrence, plan.date)}`
+                        : plan.date
+                          ? `Bisher: ${formatDate(plan.date)}${statusSuffix(plan.date)}`
+                          : 'Noch ohne Datum'}
                     </span>
                   </span>
                   <MoveRight size={16} className="shrink-0 text-muted-2" />
@@ -302,7 +326,11 @@ function DayCell({
           {plans.slice(0, MAX_NAMES).map((plan) => (
             <span key={plan.id} className={`flex max-w-full min-w-0 items-center gap-1 text-[11px] font-semibold ${meta.textClass}`}>
               <span className={`h-1.5 w-1.5 shrink-0 rounded-full ${meta.dotClass}`} />
-              <span className="truncate">{plan.name}</span>
+              {/* C7: Uhrzeit vor dem Namen. */}
+              <span className="truncate">
+                {plan.time && <span className="tabular-nums opacity-80">{plan.time} </span>}
+                {plan.name}
+              </span>
             </span>
           ))}
           {plans.length > MAX_NAMES && <span className="text-[11px] text-muted">+{plans.length - MAX_NAMES} weitere</span>}
@@ -314,27 +342,53 @@ function DayCell({
 
 // C6: Plan in der Tagesliste – Anzeigen-Link und „Datum entfernen“.
 // C6a: Status-Badge statt „Überfällig“; Pläne des Tages mit Akzent-Rahmen wie in der Plankarte.
-function PlanRow({ plan, exercises, onUnschedule }: { plan: TrainingPlan; exercises: Exercise[]; onUnschedule: () => void }) {
+// C7: Uhrzeit, Serien-Hinweis mit Regel; bei Serien „Serie bearbeiten“ statt „Datum entfernen“.
+//     Der Status bezieht sich auf DIESEN Termin (dayKey), nicht auf die ganze Serie.
+function PlanRow({
+  plan,
+  dayKey,
+  exercises,
+  onUnschedule,
+  onEditSeries,
+}: {
+  plan: TrainingPlan;
+  dayKey: DateKey;
+  exercises: Exercise[];
+  onUnschedule: () => void;
+  onEditSeries: () => void;
+}) {
   const totalSeconds = plan.exerciseIds
     .map((id) => exercises.find((e) => e.id === id))
     .filter((e): e is Exercise => Boolean(e))
     .reduce((sum, e) => sum + e.durationSeconds, 0);
-  const status = getPlanStatus(plan.date);
+  const status = getPlanStatus(dayKey);
 
   return (
     <li
       className={`flex items-center gap-3 rounded-2xl border bg-bg-soft p-3 ${status === 'heute' ? 'border-accent/60' : 'border-border'}`}
     >
       <Link to={`/plaene/${plan.id}`} className="min-w-0 flex-1">
-        <span className="block truncate font-semibold text-ink hover:underline">{plan.name}</span>
+        <span className="block truncate font-semibold text-ink hover:underline">
+          {plan.time && <span className="mr-1.5 tabular-nums text-accent">{plan.time}</span>}
+          {plan.name}
+        </span>
         <span className="mt-1 flex flex-wrap items-center gap-2 text-xs text-muted-2">
           <span className="inline-flex items-center gap-1">
             <Clock size={12} /> {formatDuration(totalSeconds)}
           </span>
           {status && <PlanStatusBadge status={status} />}
         </span>
+        {plan.recurrence && (
+          <span className="mt-1 flex items-center gap-1 text-xs text-muted">
+            <Repeat size={12} aria-hidden="true" /> {describeRecurrence(plan.recurrence, plan.date)}
+          </span>
+        )}
       </Link>
-      <IconButton icon={<CalendarX size={16} />} label={`Datum von „${plan.name}“ entfernen`} onClick={onUnschedule} />
+      {plan.recurrence ? (
+        <IconButton icon={<Pencil size={16} />} label={`Serie „${plan.name}“ bearbeiten`} onClick={onEditSeries} />
+      ) : (
+        <IconButton icon={<CalendarX size={16} />} label={`Datum von „${plan.name}“ entfernen`} onClick={onUnschedule} />
+      )}
     </li>
   );
 }

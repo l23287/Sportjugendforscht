@@ -60,6 +60,21 @@ export interface Exercise {
 // und beim Bearbeiten nie verändert.
 export type ExerciseInput = Omit<Exercise, 'id' | 'createdAt' | 'sportId'>;
 
+// C7: Wiederholung eines Plans. Bewusst klein gehalten (Abstimmung im Team): wöchentlich mit Wochentagen
+// und Abstand oder monatlich am selben Tag; Ende „nie“ (until = null) oder an einem Datum.
+// Einzelne Termine auslassen (z. B. Ferien) ist auf später verschoben.
+export type RecurrenceFrequency = 'weekly' | 'monthly';
+
+export interface Recurrence {
+  freq: RecurrenceFrequency;
+  /** C7: Abstand in Wochen (1 = jede Woche, 2 = jede 2. Woche …); bei „monthly“ immer 1. */
+  interval: number;
+  /** C7: Wochentage 0 = Montag … 6 = Sonntag (nur bei „weekly“, mindestens einer). */
+  weekdays: number[];
+  /** C7: Letzter möglicher Termin (JJJJ-MM-TT) oder null = endet nie. */
+  until: string | null;
+}
+
 export interface TrainingPlan {
   id: string;
   name: string;
@@ -67,6 +82,10 @@ export interface TrainingPlan {
   targetGroup: string;
   date: string | null;
   exerciseIds: string[];
+  /** C7: Uhrzeit „HH:MM“ (optional). */
+  time: string | null;
+  /** C7: Wiederholungsregel (optional). `date` ist dann der erste Termin der Serie. */
+  recurrence: Recurrence | null;
   /** C5: Sportart, zu der der Plan gehört (stabile ID aus C1). Wird beim Anlegen automatisch gesetzt. */
   sportId: SportId;
   createdAt: string;
