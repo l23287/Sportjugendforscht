@@ -10,12 +10,15 @@ import { PrimaryButton } from './PrimaryButton';
 import { Modal } from './Modal';
 import { ConfirmDialog } from './ConfirmDialog';
 import { CoreGoalBadge } from './CoreGoalBadge';
+// C15: Einheitliche Klapp-Karte.
+import { CollapsibleSection } from './Collapsible';
 import { inputClass, labelClass } from '../lib/formStyles';
 import { CORE_GOAL_MAX_LENGTH, MAX_CORE_GOALS } from '../lib/coreGoals';
 import { isDateKey } from '../lib/dateKey';
 import type { CoreGoal } from '../types';
 
-export function CoreGoalsSettings() {
+// C15: `defaultOpen` – geöffnet, wenn man über den Link der Startseite kommt.
+export function CoreGoalsSettings({ defaultOpen = false }: { defaultOpen?: boolean }) {
   const { goals, addGoal, updateGoal, toggleGoalAchieved, deleteGoal, moveGoal } = useAppData();
   const { sport } = useSport();
   const [text, setText] = useState('');
@@ -47,13 +50,16 @@ export function CoreGoalsSettings() {
   }
 
   return (
-    <div id="kernziele" className="flex scroll-mt-6 flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
-      <div>
-        <h2 className="font-display text-lg font-bold text-ink">Kernziele für {sport.name}</h2>
-        <p className="mt-1 text-sm text-muted">
-          Bis zu drei Ziele, die auf deiner Startseite erscheinen. Ziel 1 ist das wichtigste.
-        </p>
-      </div>
+    <>
+    {/* C15: Karte ein-/ausklappbar, anfangs geschlossen (Abstimmung im Team). Ausnahme: Sprung von der Startseite
+        („Kernziele festlegen/Bearbeiten“, #kernziele) öffnet sie direkt. Dialoge liegen außerhalb des Klappbereichs. */}
+    <CollapsibleSection
+      id="kernziele"
+      title={`Kernziele für ${sport.name}`}
+      summary={goals.length === 0 ? 'Noch keine Kernziele' : `${goals.filter((g) => g.achieved).length} von ${goals.length} erreicht`}
+      description="Bis zu drei Ziele, die auf deiner Startseite erscheinen. Ziel 1 ist das wichtigste."
+      defaultOpen={defaultOpen}
+    >
 
       {goals.length > 0 && (
         <ol className="flex flex-col gap-2">
@@ -161,6 +167,8 @@ export function CoreGoalsSettings() {
         </form>
       )}
 
+    </CollapsibleSection>
+
       <Modal open={editing !== null} title="Kernziel bearbeiten" onClose={() => setEditing(null)}>
         {editing && (
           <form onSubmit={handleSaveEdit} noValidate className="flex flex-col gap-4">
@@ -215,6 +223,6 @@ export function CoreGoalsSettings() {
         }}
         onCancel={() => setPendingDelete(null)}
       />
-    </div>
+    </>
   );
 }

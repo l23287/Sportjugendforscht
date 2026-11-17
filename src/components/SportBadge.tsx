@@ -4,16 +4,18 @@
 //
 // Die Farbe wird bewusst per `style` (CSS-Variable) gesetzt und NICHT als dynamische Tailwind-Klasse
 // (z. B. `border-${color}`): Tailwind erzeugt nur Klassen, die wörtlich im Quellcode stehen.
-import type { CSSProperties } from 'react';
 import type { Sport } from '../types';
+// C15: Gemeinsamer Leucht-Stil.
+import { sportGlowStyle } from '../lib/sportStyle';
 
 type BadgeSize = 'xs' | 'sm' | 'md' | 'lg';
 
 const sizeClasses: Record<BadgeSize, string> = {
-  xs: 'h-6 w-6 rounded-lg border-[1.5px] text-xs',
-  sm: 'h-8 w-8 rounded-xl border-2 text-base',
-  md: 'h-11 w-11 rounded-2xl border-2 text-xl',
-  lg: 'h-14 w-14 rounded-2xl border-[2.5px] text-3xl',
+  // C15: einheitlich 1-px-Rahmen (vorher 1,5–2,5 px in voller Sportfarbe) – die Farbe trägt das Leuchten.
+  xs: 'h-6 w-6 rounded-lg border text-xs',
+  sm: 'h-8 w-8 rounded-xl border text-base',
+  md: 'h-11 w-11 rounded-2xl border text-xl',
+  lg: 'h-14 w-14 rounded-2xl border text-3xl',
 };
 
 interface SportBadgeProps {
@@ -26,11 +28,8 @@ interface SportBadgeProps {
 
 export function SportBadge({ sport, size = 'sm', className = '', decorative = true }: SportBadgeProps) {
   // C2: Rahmen in voller Sportfarbe (Kontrast ≥ 3:1 geprüft), Hintergrund leicht getönt (Hex-Alpha 1f ≈ 12 %).
-  const style = {
-    '--sport-color': sport.color,
-    borderColor: 'var(--sport-color)',
-    backgroundColor: `${sport.color}1f`,
-  } as CSSProperties;
+  // C15: Ersetzt durch das gemeinsame dezente Leuchten (feiner Rahmen + farbiger Glow) – wie alle Sport-Elemente.
+  const style = sportGlowStyle(sport.color);
 
   return (
     <span

@@ -58,7 +58,9 @@ Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
 | C13 | Notizen in der Ausführung (automatisch gespeichert), als Verlauf im Plandetail | ✅ umgesetzt | 17.11.2026 | [C13.md](C13.md) |
 | C14 | Statistiken erweitern (Woche/Monat, Planerfüllung, Bestwerte, Kernziele, lange nicht trainiert) und wöchentlicher Flammenstreak | ✅ umgesetzt | 17.11.2026 | [C14.md](C14.md) |
 | C14a | Nachbesserung: Flammenstreak in Tagen statt Wochen, Titel „Übungen lange nicht trainiert“ | ✅ umgesetzt | 17.11.2026 | [C14a.md](C14a.md) |
-| C15 | Design-Abstimmung und finale Kontrolle aller neuen Features | ⏳ offen | – | – |
+| C15 | Einstellungen und Notizen klappbar, Sportfarben als dezentes Leuchten, finale Kontrolle aller Funktionen | ✅ umgesetzt | 17.11.2026 | [C15.md](C15.md) |
+
+**Flowstate C ist abgeschlossen.** Alle Chunks (C11–C15) plus die Nachbesserungen C11a und C14a sind auf `phase-1` umgesetzt.
 
 ### Für später vorgemerkt (Flowstate C)
 

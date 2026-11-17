@@ -5,6 +5,8 @@ import { SlidersHorizontal } from 'lucide-react';
 import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { TRAINER_FEATURES } from '../lib/trainerFeatures';
 import { Switch } from './Switch';
+// C15: Einheitliche Klapp-Karte.
+import { CollapsibleSection } from './Collapsible';
 
 export function TrainerFeaturesSettings() {
   const { features, setFeature, setAllFeatures } = useTrainerFeatures();
@@ -16,13 +18,12 @@ export function TrainerFeaturesSettings() {
     allState === true ? 'Alle eingeschaltet' : allState === false ? 'Alle ausgeschaltet' : `${enabledCount} von ${TRAINER_FEATURES.length} eingeschaltet`;
 
   return (
-    <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
-      <div>
-        <h2 className="font-display text-lg font-bold text-ink">Trainer-Funktionen</h2>
-        <p className="mt-1 text-sm text-muted">
-          Blende Angaben aus, die du nicht brauchst. Bereits gespeicherte Werte bleiben erhalten.
-        </p>
-      </div>
+    // C15: Ein-/ausklappbar, anfangs geschlossen; im Kopf der Stand des Hauptschalters.
+    <CollapsibleSection
+      title="Trainer-Funktionen"
+      summary={allHint}
+      description="Blende Angaben aus, die du nicht brauchst. Bereits gespeicherte Werte bleiben erhalten."
+    >
       {/* C9a: Hauptschalter – gleicher Zeilenaufbau wie die Einzelschalter, aber hervorgehoben (Primär-Rahmen/-Fläche),
           damit klar ist, dass er die Zeilen darunter steuert. */}
       <div
@@ -83,6 +84,6 @@ export function TrainerFeaturesSettings() {
           );
         })}
       </ul>
-    </div>
+    </CollapsibleSection>
   );
 }

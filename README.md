@@ -13,7 +13,7 @@ bis zur Trainingsdurchführung mit Timer.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
   Die Dauer ist sekundengenau einstellbar und wird in Uhrform angezeigt, z. B. „1:30 Min.“ (C4).
   Bei Tischtennis zusätzlich der Reiter **Aufschlagtraining** (Live-Tracking gut/schlecht mit Verlaufsdiagramm, C3).
-- **Notizen** – während der Ausführung notieren (automatisch gespeichert), als Verlauf je Übung im Plandetail (C13).
+- **Notizen** – während der Ausführung notieren (automatisch gespeichert), als Verlauf je Übung im Plandetail (C13), dort ein- und ausklappbar (C15).
 - **Stoppuhr** – im Übungsbereich, auf Hundertstel genau, läuft bei Seitenwechsel weiter; bis zu 10 benannte Werte je
   Sportart mit Bestwert (C12).
 - **Gym** – Sätze, Gewichte und Satzpausen je Übung; Ausführung Satz für Satz mit Gewicht ± 0,5 kg (C11a) und automatischer
@@ -22,7 +22,7 @@ bis zur Trainingsdurchführung mit Timer.
   auf einen Tag legen (C6). Pläne sind „Heute“, „Ausstehend“ oder „Vergangen“ (C6a). Pläne können eine Uhrzeit haben
   und sich wöchentlich (mit Wochentagen) oder monatlich wiederholen (C7); einzelne Termine lassen sich austragen (C7a).
 - **Kernziele** – bis zu drei Ziele je Sportart (mit optionalem Zieldatum, abhakbar), festgelegt in den Einstellungen
-  und angezeigt auf der Startseite (C8).
+  und angezeigt auf der Startseite (C8). Alle Bereiche der Einstellungen sind ein- und ausklappbar (C15).
 - **Trainer-Funktionen** – Zielgruppe und Schwierigkeitsgrad lassen sich in den Einstellungen ein- und ausschalten;
   gespeicherte Werte bleiben erhalten (C9); ein Hauptschalter schaltet alle gleichzeitig (C9a).
 - **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen; dazu
@@ -32,7 +32,7 @@ bis zur Trainingsdurchführung mit Timer.
   Sportarten), mit Aktivitäts-Kalender der letzten 12 Wochen und kleiner Flamme auf der Startseite (C14).
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
   die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes
-  Symbol und eine Farbe für die Umrandung des Sporticons; bei eigenen Sportarten frei wählbar (C2).
+  Symbol und eine Farbe, in der das Sporticon dezent leuchtet; bei eigenen Sportarten frei wählbar (C2, C15).
 
 Die Weiterentwicklung ist in Chunks dokumentiert, siehe [`docs/chunks/`](docs/chunks/README.md).
 

@@ -1,8 +1,11 @@
 // C13: Notizen einer Übung im Plandetail – ruhige Zeilen im App-Stil (kein gelber „Zettel“-Look, keine extra Kästchen;
-// Feedback aus C6a). Neueste Notiz sichtbar, ältere über „+n weitere“ aufklappbar. Bearbeiten im Dialog, Löschen mit
+// Feedback aus C6a). Neueste Notiz zuerst.
+// C15: Ganzer Notizbereich je Übung ein-/ausklappbar (anfangs zu); „+n weitere“ entfällt. Bearbeiten im Dialog, Löschen mit
 // Bestätigung – dieselben Bausteine wie bei Kernzielen und Stoppuhr-Werten.
-import { useState, type FormEvent } from 'react';
-import { ChevronDown, Pencil, StickyNote, Trash2 } from 'lucide-react';
+import { useId, useState, type FormEvent } from 'react';
+import { Pencil, StickyNote, Trash2 } from 'lucide-react';
+// C15: Notizen ein-/ausklappbar – gleiche Animation und gleicher Pfeil wie die Einstellungen-Karten.
+import { Collapse, CollapseChevron } from './Collapsible';
 import { useAppData } from '../context/AppDataContext';
 import { Modal } from './Modal';
 import { ConfirmDialog } from './ConfirmDialog';
@@ -14,16 +17,28 @@ import { toDateKey, todayKey } from '../lib/dateKey';
 import { PLAN_STATUS_META } from '../lib/planStatus';
 import type { ExerciseNote } from '../types';
 
-export function PlanExerciseNotes({ planId, exerciseId }: { planId: string; exerciseId: string }) {
+// C15: Auf-/Zu-Zustand kommt vom Plandetail, damit der Chip „n Notizen“ oben alle gleichzeitig öffnen kann.
+export function PlanExerciseNotes({
+  planId,
+  exerciseId,
+  open,
+  onToggle,
+}: {
+  planId: string;
+  exerciseId: string;
+  open: boolean;
+  onToggle: () => void;
+}) {
   const { exerciseNotes, updateExerciseNote, deleteExerciseNote } = useAppData();
   const notes = notesForExercise(exerciseNotes, planId, exerciseId);
-  const [expanded, setExpanded] = useState(false);
   const [editing, setEditing] = useState<{ note: ExerciseNote; text: string; error: string } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<ExerciseNote | null>(null);
+  const contentId = useId();
 
   if (notes.length === 0) return null;
-  const visible = expanded ? notes : notes.slice(0, 1);
   const today = todayKey();
+  // C15: „Heute“ auch im eingeklappten Kopf – man sieht nach dem Training sofort, dass eine neue Notiz da ist.
+  const hasToday = notes.some((note) => toDateKey(new Date(note.createdAt)) === today);
 
   function handleSave(event: FormEvent) {
     event.preventDefault();
@@ -34,9 +49,27 @@ export function PlanExerciseNotes({ planId, exerciseId }: { planId: string; exer
   }
 
   return (
-    <div className="w-full border-t border-border pt-3">
-      <ul className="flex flex-col gap-2.5" aria-label="Notizen">
-        {visible.map((note) => {
+    <div className="w-full border-t border-border pt-2">
+      {/* C15: Kopfzeile „Notizen · n“ als Klapp-Button (anfangs zu). Ersetzt „+n weitere“ aus C13 – nur eine Klapp-Ebene. */}
+      <button
+        type="button"
+        aria-expanded={open}
+        aria-controls={contentId}
+        onClick={onToggle}
+        className="flex min-h-11 w-full items-center gap-2 rounded-xl text-left text-sm font-semibold text-muted transition hover:text-ink"
+      >
+        <StickyNote size={15} className="shrink-0 text-accent" aria-hidden="true" />
+        <span className="whitespace-nowrap">{notes.length === 1 ? '1 Notiz' : `${notes.length} Notizen`}</span>
+        {/* C15: nur zugeklappt – aufgeklappt trägt die Notiz selbst das Badge (sonst doppelt). */}
+        {hasToday && !open && (
+          <span className={`rounded-2xl px-2 py-0.5 text-xs font-semibold ${PLAN_STATUS_META.heute.badgeClass}`}>Heute</span>
+        )}
+        <span className="flex-1" />
+        <CollapseChevron open={open} size={18} />
+      </button>
+      <Collapse open={open} id={contentId}>
+      <ul className="flex flex-col gap-2.5 pb-1 pt-1" aria-label="Notizen">
+        {notes.map((note) => {
           const isToday = toDateKey(new Date(note.createdAt)) === today;
           return (
             <li key={note.id} className="flex items-start gap-2.5">
@@ -76,17 +109,7 @@ export function PlanExerciseNotes({ planId, exerciseId }: { planId: string; exer
           );
         })}
       </ul>
-      {notes.length > 1 && (
-        <button
-          type="button"
-          onClick={() => setExpanded((v) => !v)}
-          aria-expanded={expanded}
-          className="mt-2 inline-flex items-center gap-1 py-1 text-xs font-semibold text-accent underline-offset-2 hover:underline"
-        >
-          <ChevronDown size={14} className={`transition-transform ${expanded ? 'rotate-180' : ''}`} aria-hidden="true" />
-          {expanded ? 'Weniger anzeigen' : `+${notes.length - 1} weitere`}
-        </button>
-      )}
+      </Collapse>
 
       <Modal open={editing !== null} title="Notiz bearbeiten" onClose={() => setEditing(null)}>
         {editing && (

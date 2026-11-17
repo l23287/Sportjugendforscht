@@ -19,6 +19,8 @@ import { StrengthSession } from '../components/StrengthSession';
 import { StrengthSummary } from '../components/StrengthSummary';
 // C13: Notizen aus der Ausführung.
 import { PlanExerciseNotes } from '../components/PlanExerciseNotes';
+// C15: Pfeil im Notizen-Chip.
+import { CollapseChevron } from '../components/Collapsible';
 // C9: Schalter „Zielgruppe“.
 import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
@@ -31,6 +33,8 @@ export function PlanDetail() {
   const { features } = useTrainerFeatures();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
+  // C15: Übungen, deren Notizen aufgeklappt sind (anfangs keine).
+  const [openNotes, setOpenNotes] = useState<Set<string>>(() => new Set());
 
   const plan = id ? getPlan(id) : undefined;
 
@@ -63,7 +67,18 @@ export function PlanDetail() {
   // C7: Bei Serien zählt der nächste (bzw. letzte) Termin.
   const schedule = getPlanSchedule(plan);
   // C13: Notizen nur zu Übungen, die (noch) im Plan sind.
-  const planNoteCount = exerciseNotes.filter((n) => n.planId === plan.id && plan.exerciseIds.includes(n.exerciseId)).length;
+  const planNotes = exerciseNotes.filter((n) => n.planId === plan.id && plan.exerciseIds.includes(n.exerciseId));
+  const planNoteCount = planNotes.length;
+  // C15: Übungen mit Notizen – für „alle auf-/zuklappen“ über den Chip.
+  const noteExerciseIds = [...new Set(planNotes.map((n) => n.exerciseId))];
+  const allNotesOpen = noteExerciseIds.length > 0 && noteExerciseIds.every((id) => openNotes.has(id));
+  const toggleNotes = (exerciseId: string) =>
+    setOpenNotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(exerciseId)) next.delete(exerciseId);
+      else next.add(exerciseId);
+      return next;
+    });
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -94,10 +109,18 @@ export function PlanDetail() {
           {/* C7: Wiederholung als eigener Chip im Stil der übrigen Info-Chips. */}
           {/* C13: Anzahl der Notizen im Plan als Info-Chip (nur wenn vorhanden). */}
           {planNoteCount > 0 && (
-            <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
+            // C15: Chip ist jetzt ein Button – klappt alle Notizen des Plans auf bzw. zu (gleicher Chip-Stil).
+            <button
+              type="button"
+              aria-expanded={allNotesOpen}
+              onClick={() => setOpenNotes(allNotesOpen ? new Set() : new Set(noteExerciseIds))}
+              title={allNotesOpen ? 'Alle Notizen zuklappen' : 'Alle Notizen aufklappen'}
+              className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted transition hover:text-ink"
+            >
               <StickyNote size={13} />
               {planNoteCount === 1 ? '1 Notiz' : `${planNoteCount} Notizen`}
-            </span>
+              <CollapseChevron open={allNotesOpen} size={13} />
+            </button>
           )}
           {plan.recurrence && (
             <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
@@ -166,7 +189,13 @@ export function PlanDetail() {
                 Start
               </button>
               {/* C13: Notizen zu dieser Übung in diesem Plan (neueste zuerst). */}
-              <PlanExerciseNotes planId={plan.id} exerciseId={exercise.id} />
+              {/* C15: einklappbar, anfangs zu. */}
+              <PlanExerciseNotes
+                planId={plan.id}
+                exerciseId={exercise.id}
+                open={openNotes.has(exercise.id)}
+                onToggle={() => toggleNotes(exercise.id)}
+              />
             </li>
           ))}
         </ol>

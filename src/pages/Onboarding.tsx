@@ -13,7 +13,7 @@ import { CalendarPreview, ExercisePreview, GoalsPreview, PlanPreview } from '../
 import { useSport } from '../context/SportContext';
 import { markOnboardingSeen } from '../lib/onboarding';
 import { PRESET_SPORTS, hasServeTraining } from '../lib/sport';
-import { sportFrameStyle } from '../lib/sportStyle';
+import { sportGlowStyle } from '../lib/sportStyle';
 import type { Sport } from '../types';
 
 // C10: Vorauswahl im ersten Schritt – die bekanntesten Sportarten; „Alle anzeigen“ blendet die übrigen ein.
@@ -257,9 +257,10 @@ function SportChoice({
               type="button"
               onClick={() => onSelect(item.id)}
               aria-pressed={selected}
-              style={sportFrameStyle(item.color, selected ? '40' : '0f')}
-              className={`inline-flex h-11 items-center gap-2 rounded-2xl border-2 px-3.5 text-sm font-semibold transition ${
-                selected ? 'text-ink ring-2 ring-ink ring-offset-2 ring-offset-bg' : 'text-muted hover:text-ink'
+              // C15: dezentes Leuchten statt Rahmen; Auswahl über stärkeres Leuchten + Häkchen.
+              style={sportGlowStyle(item.color, selected ? 'strong' : 'soft')}
+              className={`inline-flex h-11 items-center gap-2 rounded-2xl border px-3.5 text-sm font-semibold transition ${
+                selected ? 'text-ink' : 'text-muted hover:text-ink'
               }`}
             >
               <span aria-hidden="true">{item.emoji}</span>
@@ -299,8 +300,9 @@ function FinalStep({ sport }: { sport: Sport }) {
   return (
     <div className="flex flex-col gap-6">
       <span
-        style={sportFrameStyle(sport.color)}
-        className="inline-flex h-11 items-center gap-2.5 self-start rounded-2xl border-2 px-4 font-semibold text-ink"
+        // C15: dezentes Leuchten statt 2-px-Rahmen.
+        style={sportGlowStyle(sport.color)}
+        className="inline-flex h-11 items-center gap-2.5 self-start rounded-2xl border px-4 font-semibold text-ink"
       >
         <span aria-hidden="true">{sport.emoji}</span>
         {sport.name}

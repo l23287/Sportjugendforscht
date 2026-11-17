@@ -6,13 +6,14 @@
 import { Link } from 'react-router-dom';
 import { useSport } from '../context/SportContext';
 // C2c: Rahmen-Stil in gemeinsamen Helfer ausgelagert (auch im Auswahlbereich der Einstellungen genutzt).
-import { sportFrameStyle } from '../lib/sportStyle';
+import { sportGlowStyle } from '../lib/sportStyle';
 
 export function SportPill({ className = '' }: { className?: string }) {
   const { sport } = useSport();
 
   // C2b: Rahmen in voller Sportfarbe (Kontrast ≥ 3:1, siehe C2), Hintergrund leicht getönt (≈ 12 %).
-  const style = sportFrameStyle(sport.color);
+  // C15: ersetzt durch dezentes Leuchten (feiner Rahmen, farbiger Glow).
+  const style = sportGlowStyle(sport.color);
 
   return (
     <Link
@@ -21,7 +22,8 @@ export function SportPill({ className = '' }: { className?: string }) {
       aria-label={`Aktuelle Sportart: ${sport.name} – Sportart wechseln`}
       style={style}
       // C2b: border-2 statt border/border-border, damit die Sportfarbe deutlich sichtbar ist.
-      className={`flex h-9 items-center gap-2 rounded-2xl border-2 px-3 text-xs font-medium text-ink transition hover:brightness-125 md:text-sm ${className}`}
+      // C15: wieder 1 px – die Farbe trägt jetzt der weiche Schatten.
+      className={`flex h-9 items-center gap-2 rounded-2xl border px-3 text-xs font-medium text-ink transition hover:brightness-125 md:text-sm ${className}`}
     >
       {/* C2b: Emoji ohne eigenes Kästchen – die Umrandung trägt jetzt die ganze Anzeige. */}
       <span className="text-base leading-none" aria-hidden="true">

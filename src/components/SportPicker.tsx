@@ -14,7 +14,7 @@ import { PrimaryButton } from './PrimaryButton';
 import { ConfirmDialog } from './ConfirmDialog';
 import { Modal } from './Modal';
 // C2c: SportBadge wird hier nicht mehr benötigt; Rahmen über gemeinsamen Stil-Helfer.
-import { sportFrameStyle } from '../lib/sportStyle';
+import { sportGlowStyle } from '../lib/sportStyle';
 import { SportAppearancePicker } from './SportAppearancePicker';
 import { inputClass, labelClass } from '../lib/formStyles';
 import {
@@ -100,8 +100,9 @@ export function SportPicker() {
   return (
     <div className="flex flex-col gap-5">
       {/* C1: Aktuelle Auswahl gut sichtbar oben. */}
-      {/* C2c: Ganze Karte in der Sportfarbe umrandet (2 px) und leicht getönt, Emoji ohne eigenes Kästchen. */}
-      <div className="flex items-center gap-3 rounded-2xl border-2 p-4" style={sportFrameStyle(activeSport.color)}>
+      {/* C2c: Ganze Karte in der Sportfarbe umrandet (2 px) und leicht getönt, Emoji ohne eigenes Kästchen.
+          C15: jetzt dezentes Leuchten statt 2-px-Rahmen. */}
+      <div className="flex items-center gap-3 rounded-2xl border p-4" style={sportGlowStyle(activeSport.color)}>
         {/* C2: Großes Sporticon mit Umrandung in der Sportfarbe. */}
         <span className="text-4xl leading-none" aria-hidden="true">
           {activeSport.emoji}
@@ -188,7 +189,7 @@ export function SportPicker() {
         {/* C2: Symbol + Farbe der neuen Sportart wählen, mit Live-Vorschau. */}
         <div className="mt-2 flex flex-col gap-4 rounded-2xl border border-border bg-bg-soft p-4">
           {/* C2c: Vorschau zeigt die ganze Umrandung so, wie sie später in Auswahl und Kopfzeile erscheint. */}
-          <div className="flex items-center gap-3 rounded-2xl border-2 p-3" style={sportFrameStyle(newAppearance.color)}>
+          <div className="flex items-center gap-3 rounded-2xl border p-3" style={sportGlowStyle(newAppearance.color)}>
             <span className="text-2xl leading-none" aria-hidden="true">
               {newAppearance.emoji}
             </span>
@@ -206,7 +207,7 @@ export function SportPicker() {
         {editing && (
           <div className="flex flex-col gap-5">
             {/* C2c: Vorschau im Dialog mit Umrandung des ganzen Elements. */}
-            <div className="flex items-center gap-3 rounded-2xl border-2 p-4" style={sportFrameStyle(editing.draft.color)}>
+            <div className="flex items-center gap-3 rounded-2xl border p-4" style={sportGlowStyle(editing.draft.color)}>
               <span className="text-3xl leading-none" aria-hidden="true">
                 {editing.draft.emoji}
               </span>
@@ -284,13 +285,15 @@ function SportChip({
   onDelete?: () => void;
 }) {
   return (
+    // C15: Statt voller Umrandung dezentes Leuchten; ausgewählt = stärkeres Leuchten + Häkchen + helle Schrift
+    //      (der weiße Ring entfällt – er wirkte wie eine zweite, harte Umrandung).
     // C2c: Ganzer Chip in der Sportfarbe umrandet. Ausgewählt = stärker getönt + weißer Ring + Häkchen
     // (statt blauem Verlauf, der die Sportfarbe überdecken würde).
     <span
-      style={sportFrameStyle(sport.color, selected ? '40' : '0f')}
-      className={`inline-flex h-10 items-center rounded-2xl border-2 text-sm font-semibold transition ${
+      style={sportGlowStyle(sport.color, selected ? 'strong' : 'soft')}
+      className={`inline-flex h-10 items-center rounded-2xl border text-sm font-semibold transition ${
         selected
-          ? 'text-ink ring-2 ring-ink ring-offset-2 ring-offset-surface'
+          ? 'text-ink'
           : 'text-muted hover:text-ink'
       }`}
     >

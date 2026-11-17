@@ -10,12 +10,17 @@ import { TrainerFeaturesSettings } from '../components/TrainerFeaturesSettings';
 import { SportPicker } from '../components/SportPicker';
 import { ImpressumDialog } from '../components/ImpressumDialog';
 import { DatenschutzDialog } from '../components/DatenschutzDialog';
+// C15: Einheitliche Klapp-Karte; Sporticon als Zusammenfassung im Kopf.
+import { CollapsibleSection } from '../components/Collapsible';
+import { SportBadge } from '../components/SportBadge';
+import { useSport } from '../context/SportContext';
 
 export function Settings() {
   const [impressumOpen, setImpressumOpen] = useState(false);
   const [datenschutzOpen, setDatenschutzOpen] = useState(false);
   const { hash } = useLocation();
   const navigate = useNavigate();
+  const { sport } = useSport();
 
   // C8: Link „Kernziele festlegen/Bearbeiten“ von der Startseite (#kernziele) springt direkt zur Karte.
   useEffect(() => {
@@ -30,16 +35,24 @@ export function Settings() {
       </header>
 
       {/* C8: Kernziele über „Sportart“, weil die Sportart-Auswahl sehr lang ist (Abstimmung im Team). */}
-      <CoreGoalsSettings />
+      {/* C15: Alle Bereiche anfangs geschlossen – nur der Sprung von der Startseite öffnet die Kernziele. */}
+      <CoreGoalsSettings defaultOpen={hash === '#kernziele'} />
 
       {/* C9: Zwischen „Kernziele“ und „Sportart“, damit die Karte nicht unter der langen Sportart-Liste verschwindet. */}
       <TrainerFeaturesSettings />
 
-      <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
-        <h2 className="font-display text-lg font-bold text-ink">Sportart</h2>
+      {/* C15: Ein-/ausklappbar, anfangs geschlossen; im Kopf die aktive Sportart. */}
+      <CollapsibleSection
+        title="Sportart"
+        summary={
+          <>
+            <SportBadge sport={sport} size="xs" /> <span className="truncate">{sport.name}</span>
+          </>
+        }
+      >
         {/* C1: Auswahl aus 25 Sportarten plus eigene Sportarten hinzufügen/löschen. */}
         <SportPicker />
-      </div>
+      </CollapsibleSection>
 
       {/* C10: Einführung erneut ansehen – runder Sekundär-Button im Stil von „Heute“ im Kalender (C6). */}
       <button
