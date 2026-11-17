@@ -167,3 +167,13 @@ export interface ExerciseLogEntry {
   completedAt: string;
   sets: StrengthSet[] | null;
 }
+
+// C12: Gespeicherter Stoppuhr-Wert – je Sportart höchstens 10, mit Namen (z. B. „Sprint 30 m“).
+export interface StopwatchValue {
+  id: string;
+  sportId: SportId;
+  name: string;
+  /** Gemessene Zeit in Millisekunden; angezeigt auf Hundertstel. */
+  ms: number;
+  recordedAt: string;
+}

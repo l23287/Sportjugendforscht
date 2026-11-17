@@ -245,13 +245,17 @@ export function SportPicker() {
 function deleteDescription(
   sport: Sport,
   activeSportId: string,
-  counts: { plans: number; exercises: number; goals: number },
+  counts: { plans: number; exercises: number; goals: number; stopwatchValues: number },
 ): string {
   const parts: string[] = [];
   if (counts.plans > 0) parts.push(`${counts.plans} ${counts.plans === 1 ? 'Plan' : 'Pläne'}`);
   if (counts.exercises > 0) parts.push(`${counts.exercises} ${counts.exercises === 1 ? 'Übung' : 'Übungen'}`);
   // C8: Kernziele werden mitgelöscht und daher mitgenannt.
   if (counts.goals > 0) parts.push(`${counts.goals} ${counts.goals === 1 ? 'Kernziel' : 'Kernziele'}`);
+  // C12: Gespeicherte Stoppuhr-Werte werden ebenfalls mitgelöscht.
+  if (counts.stopwatchValues > 0) {
+    parts.push(`${counts.stopwatchValues} ${counts.stopwatchValues === 1 ? 'Stoppuhr-Wert' : 'Stoppuhr-Werte'}`);
+  }
   // C8: Aufzählung „A, B und C“ statt „A und B und C“.
   const list = parts.length > 1 ? `${parts.slice(0, -1).join(', ')} und ${parts[parts.length - 1]}` : parts[0];
   const main =

@@ -5,6 +5,7 @@ import type {
   CoreGoal,
   Exercise,
   ExerciseLogEntry,
+  StopwatchValue,
   StrengthSet,
   ExerciseInput,
   PlanInput,
@@ -23,6 +24,8 @@ import { useSport } from './SportContext';
 import { loadSportIdRemap, migrateSportId } from '../lib/sport';
 // C11: Sätze/Gewichte einlesen.
 import { sanitizeStrength } from '../lib/strength';
+// C12: Gespeicherte Stoppuhr-Werte.
+import { MAX_STOPWATCH_VALUES, cleanStopwatchName, sanitizeStopwatchValues, validateStopwatchName } from '../lib/stopwatch';
 // C7: Uhrzeit und Wiederholung defensiv einlesen.
 import { sanitizeRecurrence, sanitizeTime } from '../lib/recurrence';
 // C8: Kernziele.
@@ -51,7 +54,7 @@ interface AppDataContextValue {
   /** C5: Sportart eines Plans – auch wenn er zu einer anderen als der aktiven Sportart gehört (für Weiterleitungen). */
   getPlanSportId: (id: string) => SportId | undefined;
   /** C5: Anzahl Pläne/Übungen einer Sportart (für den Löschdialog eigener Sportarten). C8: plus Kernziele. */
-  countSportData: (sportId: SportId) => { plans: number; exercises: number; goals: number };
+  countSportData: (sportId: SportId) => { plans: number; exercises: number; goals: number; stopwatchValues: number };
   /** C8: Kernziele der AKTIVEN Sportart in ihrer Reihenfolge (höchstens drei). */
   goals: CoreGoal[];
   addGoal: (input: GoalInput) => GoalResult;
@@ -65,6 +68,11 @@ interface AppDataContextValue {
   logExerciseCompleted: (exerciseId: string, planId: string | null, sets: StrengthSet[] | null) => void;
   /** C11: Neue Gewichte aus der Ausführung in die Vorlage übernehmen (nur Gewichte, Wiederholungen bleiben). */
   applyStrengthWeights: (exerciseId: string, weights: number[]) => void;
+  /** C12: Gespeicherte Stoppuhr-Werte der AKTIVEN Sportart (neueste zuerst, höchstens 10). */
+  stopwatchValues: StopwatchValue[];
+  addStopwatchValue: (name: string, ms: number) => GoalResult;
+  renameStopwatchValue: (id: string, name: string) => GoalResult;
+  deleteStopwatchValue: (id: string) => void;
   /** C5: Löscht alle Pläne und Übungen einer Sportart (beim Löschen einer eigenen Sportart). */
   deleteSportData: (sportId: SportId) => void;
   serveSessions: ServeSession[];
@@ -131,6 +139,20 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return Array.isArray(stored) ? (stored as ExerciseLogEntry[]).filter((e) => e && typeof e.exerciseId === 'string') : [];
   });
   useEffect(() => saveJSON('exerciseLog', exerciseLog), [exerciseLog]);
+
+  // C12: Stoppuhr-Werte aller Sportarten (inkl. Umleitung zusammengeführter eigener Sportarten aus C11).
+  const [stopwatchValues, setStopwatchValues] = useState<StopwatchValue[]>(() => {
+    const remap = loadSportIdRemap();
+    return sanitizeStopwatchValues(loadJSON<unknown>('stopwatchValues', [])).map((v) => ({
+      ...v,
+      sportId: remap.get(v.sportId) ?? v.sportId,
+    }));
+  });
+  useEffect(() => saveJSON('stopwatchValues', stopwatchValues), [stopwatchValues]);
+  const sportStopwatchValues = useMemo(
+    () => stopwatchValues.filter((v) => v.sportId === activeSportId),
+    [stopwatchValues, activeSportId],
+  );
 
   // C5: Zentrale Filterung nach aktiver Sportart – keine Seite muss selbst filtern, keine kann es vergessen.
   const sportPlans = useMemo(() => plans.filter((p) => p.sportId === activeSportId), [plans, activeSportId]);
@@ -205,6 +227,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         plans: plans.filter((p) => p.sportId === sportId).length,
         exercises: exercises.filter((e) => e.sportId === sportId).length,
         goals: coreGoals.filter((g) => g.sportId === sportId).length,
+        stopwatchValues: stopwatchValues.filter((v) => v.sportId === sportId).length,
       }),
       deleteSportData: (sportId) => {
         setPlans((prev) => prev.filter((p) => p.sportId !== sportId));
@@ -213,7 +236,34 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setCoreGoals((prev) => prev.filter((g) => g.sportId !== sportId));
         // C11: … ebenso ihr Übungsprotokoll.
         setExerciseLog((prev) => prev.filter((e) => e.sportId !== sportId));
+        // C12: … und ihre Stoppuhr-Werte.
+        setStopwatchValues((prev) => prev.filter((v) => v.sportId !== sportId));
       },
+      // C12: Stoppuhr-Werte – Obergrenze 10 je Sportart; bei 10 wird nichts überschrieben (Abstimmung im Team).
+      stopwatchValues: sportStopwatchValues,
+      addStopwatchValue: (name, ms) => {
+        if (sportStopwatchValues.length >= MAX_STOPWATCH_VALUES) {
+          return { ok: false, error: `Es sind höchstens ${MAX_STOPWATCH_VALUES} Werte möglich.` };
+        }
+        const error = validateStopwatchName(name);
+        if (error) return { ok: false, error };
+        const value: StopwatchValue = {
+          id: generateId(),
+          sportId: activeSportId,
+          name: cleanStopwatchName(name),
+          ms: Math.max(0, Math.round(ms)),
+          recordedAt: new Date().toISOString(),
+        };
+        setStopwatchValues((prev) => [value, ...prev]);
+        return { ok: true };
+      },
+      renameStopwatchValue: (id, name) => {
+        const error = validateStopwatchName(name);
+        if (error) return { ok: false, error };
+        setStopwatchValues((prev) => prev.map((v) => (v.id === id ? { ...v, name: cleanStopwatchName(name) } : v)));
+        return { ok: true };
+      },
+      deleteStopwatchValue: (id) => setStopwatchValues((prev) => prev.filter((v) => v.id !== id)),
       // C11: Protokoll und Gewichtsübernahme.
       exerciseLog: exerciseLog.filter((e) => e.sportId === activeSportId),
       logExerciseCompleted: (exerciseId, planId, sets) => {
@@ -311,7 +361,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setServeSessions((prev) => prev.filter((session) => session.id !== id));
       },
     };
-  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog]);
+  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog, stopwatchValues, sportStopwatchValues]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

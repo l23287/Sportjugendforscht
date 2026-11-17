@@ -3,6 +3,10 @@ import { AppDataProvider } from './context/AppDataContext';
 import { SportProvider } from './context/SportContext';
 // C9: Trainer-Funktionen (app-weit).
 import { TrainerFeaturesProvider } from './context/TrainerFeaturesContext';
+// C12: Eine Stoppuhr für die ganze App (läuft bei Seitenwechsel weiter).
+import { StopwatchProvider } from './context/StopwatchContext';
+// C12: Stoppuhr-Seite im Übungsbereich.
+import { Stopwatch } from './pages/Stopwatch';
 import { AppShell } from './components/AppShell';
 import { Disclaimer } from './components/Disclaimer';
 import { SiteGate } from './components/SiteGate';
@@ -30,6 +34,7 @@ export default function App() {
         <AppDataProvider>
           {/* C9: Schalter für Zielgruppe/Schwierigkeitsgrad – für alle Seiten verfügbar. */}
           <TrainerFeaturesProvider>
+          <StopwatchProvider>
           <BrowserRouter>
             <ScrollToTop />
             <Routes>
@@ -51,6 +56,8 @@ export default function App() {
                 {/* C3: Übungsbereich mit Reitern; Aufschlagtraining als Unterseite, nur für Tischtennis. */}
                 <Route path="/uebungen" element={<ExercisesLayout />}>
                   <Route index element={<Exercises />} />
+                  {/* C12: Stoppuhr für alle Sportarten. */}
+                  <Route path="stoppuhr" element={<Stopwatch />} />
                   <Route
                     path="aufschlagtraining"
                     element={
@@ -71,6 +78,7 @@ export default function App() {
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
+          </StopwatchProvider>
           </TrainerFeaturesProvider>
         </AppDataProvider>
       </SiteGate>
