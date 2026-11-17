@@ -5,6 +5,7 @@ import type {
   CoreGoal,
   Exercise,
   ExerciseLogEntry,
+  ExerciseNote,
   StopwatchValue,
   StrengthSet,
   ExerciseInput,
@@ -24,6 +25,8 @@ import { useSport } from './SportContext';
 import { loadSportIdRemap, migrateSportId } from '../lib/sport';
 // C11: Sätze/Gewichte einlesen.
 import { sanitizeStrength } from '../lib/strength';
+// C13: Notizen zu Übungen.
+import { cleanNoteText, sanitizeNotes, validateNoteText } from '../lib/notes';
 // C12: Gespeicherte Stoppuhr-Werte.
 import { MAX_STOPWATCH_VALUES, cleanStopwatchName, sanitizeStopwatchValues, validateStopwatchName } from '../lib/stopwatch';
 // C7: Uhrzeit und Wiederholung defensiv einlesen.
@@ -54,7 +57,13 @@ interface AppDataContextValue {
   /** C5: Sportart eines Plans – auch wenn er zu einer anderen als der aktiven Sportart gehört (für Weiterleitungen). */
   getPlanSportId: (id: string) => SportId | undefined;
   /** C5: Anzahl Pläne/Übungen einer Sportart (für den Löschdialog eigener Sportarten). C8: plus Kernziele. */
-  countSportData: (sportId: SportId) => { plans: number; exercises: number; goals: number; stopwatchValues: number };
+  countSportData: (sportId: SportId) => {
+    plans: number;
+    exercises: number;
+    goals: number;
+    stopwatchValues: number;
+    notes: number;
+  };
   /** C8: Kernziele der AKTIVEN Sportart in ihrer Reihenfolge (höchstens drei). */
   goals: CoreGoal[];
   addGoal: (input: GoalInput) => GoalResult;
@@ -73,6 +82,11 @@ interface AppDataContextValue {
   addStopwatchValue: (name: string, ms: number) => GoalResult;
   renameStopwatchValue: (id: string, name: string) => GoalResult;
   deleteStopwatchValue: (id: string) => void;
+  /** C13: Notizen der AKTIVEN Sportart (über ihre Pläne getrennt). */
+  exerciseNotes: ExerciseNote[];
+  addExerciseNote: (planId: string, exerciseId: string, text: string) => GoalResult;
+  updateExerciseNote: (id: string, text: string) => GoalResult;
+  deleteExerciseNote: (id: string) => void;
   /** C5: Löscht alle Pläne und Übungen einer Sportart (beim Löschen einer eigenen Sportart). */
   deleteSportData: (sportId: SportId) => void;
   serveSessions: ServeSession[];
@@ -149,6 +163,13 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     }));
   });
   useEffect(() => saveJSON('stopwatchValues', stopwatchValues), [stopwatchValues]);
+  // C13: Notizen aller Sportarten.
+  const [exerciseNotes, setExerciseNotes] = useState<ExerciseNote[]>(() => {
+    const remap = loadSportIdRemap();
+    return sanitizeNotes(loadJSON<unknown>('exerciseNotes', [])).map((n) => ({ ...n, sportId: remap.get(n.sportId) ?? n.sportId }));
+  });
+  useEffect(() => saveJSON('exerciseNotes', exerciseNotes), [exerciseNotes]);
+
   const sportStopwatchValues = useMemo(
     () => stopwatchValues.filter((v) => v.sportId === activeSportId),
     [stopwatchValues, activeSportId],
@@ -196,6 +217,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       },
       deletePlan: (id) => {
         setPlans((prev) => prev.filter((p) => p.id !== id));
+        // C13: Notizen des Plans werden mitgelöscht.
+        setExerciseNotes((prev) => prev.filter((n) => n.planId !== id));
       },
       // C5: Nur Pläne der aktiven Sportart sind direkt abrufbar.
       getPlan: (id) => sportPlans.find((p) => p.id === id),
@@ -216,6 +239,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       },
       deleteExercise: (id) => {
         setExercises((prev) => prev.filter((e) => e.id !== id));
+        // C13: Notizen zur Übung werden mitgelöscht (in allen Plänen).
+        setExerciseNotes((prev) => prev.filter((n) => n.exerciseId !== id));
         setPlans((prev) =>
           prev.map((p) => ({ ...p, exerciseIds: p.exerciseIds.filter((eid) => eid !== id) })),
         );
@@ -228,6 +253,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         exercises: exercises.filter((e) => e.sportId === sportId).length,
         goals: coreGoals.filter((g) => g.sportId === sportId).length,
         stopwatchValues: stopwatchValues.filter((v) => v.sportId === sportId).length,
+        notes: exerciseNotes.filter((n) => n.sportId === sportId).length,
       }),
       deleteSportData: (sportId) => {
         setPlans((prev) => prev.filter((p) => p.sportId !== sportId));
@@ -238,7 +264,35 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setExerciseLog((prev) => prev.filter((e) => e.sportId !== sportId));
         // C12: … und ihre Stoppuhr-Werte.
         setStopwatchValues((prev) => prev.filter((v) => v.sportId !== sportId));
+        // C13: … und ihre Notizen.
+        setExerciseNotes((prev) => prev.filter((n) => n.sportId !== sportId));
       },
+      // C13: Notizen – Sportart kommt vom Plan; leere Notizen werden nicht gespeichert.
+      exerciseNotes: exerciseNotes.filter((n) => n.sportId === activeSportId),
+      addExerciseNote: (planId, exerciseId, text) => {
+        const error = validateNoteText(text);
+        if (error) return { ok: false, error };
+        const note: ExerciseNote = {
+          id: generateId(),
+          planId,
+          exerciseId,
+          sportId: plans.find((p) => p.id === planId)?.sportId ?? activeSportId,
+          text: cleanNoteText(text),
+          createdAt: new Date().toISOString(),
+          updatedAt: null,
+        };
+        setExerciseNotes((prev) => [note, ...prev]);
+        return { ok: true };
+      },
+      updateExerciseNote: (id, text) => {
+        const error = validateNoteText(text);
+        if (error) return { ok: false, error };
+        setExerciseNotes((prev) =>
+          prev.map((n) => (n.id === id ? { ...n, text: cleanNoteText(text), updatedAt: new Date().toISOString() } : n)),
+        );
+        return { ok: true };
+      },
+      deleteExerciseNote: (id) => setExerciseNotes((prev) => prev.filter((n) => n.id !== id)),
       // C12: Stoppuhr-Werte – Obergrenze 10 je Sportart; bei 10 wird nichts überschrieben (Abstimmung im Team).
       stopwatchValues: sportStopwatchValues,
       addStopwatchValue: (name, ms) => {
@@ -361,7 +415,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setServeSessions((prev) => prev.filter((session) => session.id !== id));
       },
     };
-  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog, stopwatchValues, sportStopwatchValues]);
+  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog, stopwatchValues, sportStopwatchValues, exerciseNotes]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // C5: Navigate für die Weiterleitung bei Plänen einer anderen Sportart.
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Dumbbell, Pencil, Play, Repeat, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, Clock, Dumbbell, Pencil, Play, Repeat, StickyNote, Trash2, Users } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -17,6 +17,8 @@ import { describeRecurrence } from '../lib/recurrence';
 // C11: Satz-Ansicht für Gym-Übungen + Kurzbeschreibung + Protokoll.
 import { StrengthSession } from '../components/StrengthSession';
 import { StrengthSummary } from '../components/StrengthSummary';
+// C13: Notizen aus der Ausführung.
+import { PlanExerciseNotes } from '../components/PlanExerciseNotes';
 // C9: Schalter „Zielgruppe“.
 import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
@@ -25,7 +27,7 @@ import type { Exercise } from '../types';
 export function PlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { getPlan, getPlanSportId, exercises, deletePlan } = useAppData();
+  const { getPlan, getPlanSportId, exercises, deletePlan, exerciseNotes } = useAppData();
   const { features } = useTrainerFeatures();
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
@@ -60,6 +62,8 @@ export function PlanDetail() {
   const totalSeconds = planExercises.reduce((sum, e) => sum + e.durationSeconds, 0);
   // C7: Bei Serien zählt der nächste (bzw. letzte) Termin.
   const schedule = getPlanSchedule(plan);
+  // C13: Notizen nur zu Übungen, die (noch) im Plan sind.
+  const planNoteCount = exerciseNotes.filter((n) => n.planId === plan.id && plan.exerciseIds.includes(n.exerciseId)).length;
 
   return (
     <div className="flex flex-col gap-6 pb-10">
@@ -88,6 +92,13 @@ export function PlanDetail() {
           {/* C6a: Status-Badge mit Datum. */}
           {schedule && <PlanStatusBadge status={schedule.status} date={schedule.date} time={plan.time} />}
           {/* C7: Wiederholung als eigener Chip im Stil der übrigen Info-Chips. */}
+          {/* C13: Anzahl der Notizen im Plan als Info-Chip (nur wenn vorhanden). */}
+          {planNoteCount > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
+              <StickyNote size={13} />
+              {planNoteCount === 1 ? '1 Notiz' : `${planNoteCount} Notizen`}
+            </span>
+          )}
           {plan.recurrence && (
             <span className="inline-flex items-center gap-1.5 rounded-2xl bg-surface-2 px-3 py-1.5 text-xs font-semibold text-muted">
               <Repeat size={13} />
@@ -128,7 +139,8 @@ export function PlanDetail() {
           {planExercises.map((exercise, index) => (
             <li
               key={exercise.id}
-              className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-surface p-4 sm:flex-nowrap"
+              // C13: flex-wrap auch ab sm, damit die Notizen als volle Zeile unter der Übung stehen können.
+              className="flex flex-wrap items-center gap-4 rounded-2xl border border-border bg-surface p-4"
             >
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-soft font-display text-sm font-bold text-accent">
                 {index + 1}
@@ -153,6 +165,8 @@ export function PlanDetail() {
                 <Play size={16} />
                 Start
               </button>
+              {/* C13: Notizen zu dieser Übung in diesem Plan (neueste zuerst). */}
+              <PlanExerciseNotes planId={plan.id} exerciseId={exercise.id} />
             </li>
           ))}
         </ol>

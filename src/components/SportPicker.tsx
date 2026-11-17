@@ -245,7 +245,7 @@ export function SportPicker() {
 function deleteDescription(
   sport: Sport,
   activeSportId: string,
-  counts: { plans: number; exercises: number; goals: number; stopwatchValues: number },
+  counts: { plans: number; exercises: number; goals: number; stopwatchValues: number; notes: number },
 ): string {
   const parts: string[] = [];
   if (counts.plans > 0) parts.push(`${counts.plans} ${counts.plans === 1 ? 'Plan' : 'Pläne'}`);
@@ -253,6 +253,8 @@ function deleteDescription(
   // C8: Kernziele werden mitgelöscht und daher mitgenannt.
   if (counts.goals > 0) parts.push(`${counts.goals} ${counts.goals === 1 ? 'Kernziel' : 'Kernziele'}`);
   // C12: Gespeicherte Stoppuhr-Werte werden ebenfalls mitgelöscht.
+  // C13: Notizen ebenfalls nennen.
+  if (counts.notes > 0) parts.push(`${counts.notes} ${counts.notes === 1 ? 'Notiz' : 'Notizen'}`);
   if (counts.stopwatchValues > 0) {
     parts.push(`${counts.stopwatchValues} ${counts.stopwatchValues === 1 ? 'Stoppuhr-Wert' : 'Stoppuhr-Werte'}`);
   }

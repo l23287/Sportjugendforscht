@@ -7,6 +7,9 @@ import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Check, Minus, Plus, SkipForward, X } from 'lucide-react';
 import type { Exercise } from '../types';
 import { useAppData } from '../context/AppDataContext';
+// C13: Notiz während der Ausführung (wird bei jedem Schließen automatisch gespeichert).
+import { useExecutionNote } from '../hooks/useExecutionNote';
+import { ExecutionNote } from './ExecutionNote';
 import { formatCountdown } from '../lib/time';
 import { WEIGHT_BUTTON_STEP_LABEL, formatWeight, parseWeightInput, stepWeight, weightToInput } from '../lib/strength';
 
@@ -25,6 +28,18 @@ const secondaryButton =
 
 export function StrengthSession({ exercise, planId, onClose }: StrengthSessionProps) {
   const { logExerciseCompleted, applyStrengthWeights } = useAppData();
+  // C13: Notiz-Entwurf; handleClose speichert ihn auf JEDEM Schließweg, bevor der Dialog schließt.
+  const note = useExecutionNote(planId, exercise.id);
+  const handleClose = () => {
+    note.save();
+    onClose();
+  };
+  // C13: Escape am Fenster ruft immer die AKTUELLE Schließ-Funktion (mit aktuellem Notiz-Entwurf) auf,
+  //      ohne die Tastatur-Abfrage bei jedem Neuzeichnen neu anzumelden.
+  const closeRef = useRef(handleClose);
+  useEffect(() => {
+    closeRef.current = handleClose;
+  });
   const template = exercise.strength!;
   const sets = template.sets;
   const [weights, setWeights] = useState<number[]>(() => sets.map((s) => s.weightKg));
@@ -42,11 +57,11 @@ export function StrengthSession({ exercise, planId, onClose }: StrengthSessionPr
   // C11: Escape schließt – wie beim Timer.
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') closeRef.current();
     }
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, []);
 
   // C11: Satzpause als Countdown; bei 0 automatisch zum nächsten Satz (kurze Vibration, wo das Gerät es kann).
   //      Zählen und Weiterschalten sind getrennt: Das Weiterschalten passiert nicht in der State-Aktualisierung
@@ -113,7 +128,7 @@ export function StrengthSession({ exercise, planId, onClose }: StrengthSessionPr
   return (
     <div
       className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
       role="presentation"
     >
       <div
@@ -125,7 +140,7 @@ export function StrengthSession({ exercise, planId, onClose }: StrengthSessionPr
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Schließen"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-soft text-muted transition hover:text-ink"
         >
@@ -297,27 +312,30 @@ export function StrengthSession({ exercise, planId, onClose }: StrengthSessionPr
                     type="button"
                     onClick={() => {
                       applyStrengthWeights(exercise.id, weights);
-                      onClose();
+                      handleClose();
                     }}
                     className={primaryButton}
                   >
                     <Check size={18} />
                     Übernehmen
                   </button>
-                  <button type="button" onClick={onClose} className={secondaryButton}>
+                  <button type="button" onClick={handleClose} className={secondaryButton}>
                     Nur heute
                   </button>
                 </div>
               </>
             ) : (
               <div className="flex gap-3">
-                <button type="button" onClick={onClose} className={primaryButton}>
+                <button type="button" onClick={handleClose} className={primaryButton}>
                   Fertig
                 </button>
               </div>
             )}
           </>
         )}
+
+        {/* C13: Notiz zur Übung – in allen Phasen (Satz, Pause, Ende); erscheint später im Plandetail. */}
+        <ExecutionNote note={note} />
       </div>
     </div>
   );

@@ -177,3 +177,16 @@ export interface StopwatchValue {
   ms: number;
   recordedAt: string;
 }
+
+// C13: Notiz zu einer Übung in einem Plan, geschrieben während der Ausführung. Mehrere Notizen je Übung bilden einen
+// Verlauf mit Datum (Abstimmung im Team); angezeigt im Plandetail.
+export interface ExerciseNote {
+  id: string;
+  planId: string;
+  exerciseId: string;
+  sportId: SportId;
+  text: string;
+  createdAt: string;
+  /** C13: Zuletzt im Plandetail bearbeitet (sonst null). */
+  updatedAt: string | null;
+}

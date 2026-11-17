@@ -3,6 +3,9 @@ import { Pause, Play, RotateCcw, X } from 'lucide-react';
 // C4: formatDuration für die Gesamtdauer in Uhrform.
 import { formatCountdown, formatDuration } from '../lib/time';
 import { useAppData } from '../context/AppDataContext';
+// C13: Notiz während der Ausführung (wird bei jedem Schließen automatisch gespeichert).
+import { useExecutionNote } from '../hooks/useExecutionNote';
+import { ExecutionNote } from './ExecutionNote';
 import type { Exercise } from '../types';
 
 interface TimerProps {
@@ -15,6 +18,18 @@ interface TimerProps {
 export function Timer({ exercise, planId = null, onClose }: TimerProps) {
   // C11: Abgelaufene Übung als beendet protokollieren – Grundlage für den Flammenstreak (C14).
   const { logExerciseCompleted } = useAppData();
+  // C13: Notiz-Entwurf; handleClose speichert ihn auf JEDEM Schließweg, bevor der Dialog schließt.
+  const note = useExecutionNote(planId, exercise.id);
+  const handleClose = () => {
+    note.save();
+    onClose();
+  };
+  // C13: Escape am Fenster ruft immer die AKTUELLE Schließ-Funktion (mit aktuellem Notiz-Entwurf) auf,
+  //      ohne die Tastatur-Abfrage bei jedem Neuzeichnen neu anzumelden.
+  const closeRef = useRef(handleClose);
+  useEffect(() => {
+    closeRef.current = handleClose;
+  });
   // C4: Dauer liegt bereits sekundengenau vor (vorher Minuten × 60).
   const totalSeconds = exercise.durationSeconds;
   const [remaining, setRemaining] = useState(totalSeconds);
@@ -41,11 +56,11 @@ export function Timer({ exercise, planId = null, onClose }: TimerProps) {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === 'Escape') onClose();
+      if (event.key === 'Escape') closeRef.current();
     }
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  }, []);
 
   const isDone = remaining === 0;
 
@@ -68,7 +83,7 @@ export function Timer({ exercise, planId = null, onClose }: TimerProps) {
   return (
     <div
       className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
-      onClick={onClose}
+      onClick={handleClose}
       role="presentation"
     >
       <div
@@ -80,7 +95,7 @@ export function Timer({ exercise, planId = null, onClose }: TimerProps) {
       >
         <button
           type="button"
-          onClick={onClose}
+          onClick={handleClose}
           aria-label="Schließen"
           className="absolute right-5 top-5 flex h-9 w-9 items-center justify-center rounded-full border border-border bg-bg-soft text-muted transition hover:text-ink"
         >
@@ -148,12 +163,15 @@ export function Timer({ exercise, planId = null, onClose }: TimerProps) {
           )}
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleClose}
             className="h-14 flex-1 rounded-2xl border border-border font-semibold text-muted transition hover:bg-surface-2 hover:text-ink"
           >
             Schließen
           </button>
         </div>
+
+        {/* C13: Notiz zur Übung – erscheint später im Plandetail. */}
+        <ExecutionNote note={note} />
       </div>
     </div>
   );
