@@ -57,6 +57,7 @@ Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
 | C12 | Stoppuhr im Übungsbereich (Hundertstel), bis zu 10 benannte Werte je Sportart, Bestwert | ✅ umgesetzt | 17.11.2026 | [C12.md](C12.md) |
 | C13 | Notizen in der Ausführung (automatisch gespeichert), als Verlauf im Plandetail | ✅ umgesetzt | 17.11.2026 | [C13.md](C13.md) |
 | C14 | Statistiken erweitern (Woche/Monat, Planerfüllung, Bestwerte, Kernziele, lange nicht trainiert) und wöchentlicher Flammenstreak | ✅ umgesetzt | 17.11.2026 | [C14.md](C14.md) |
+| C14a | Nachbesserung: Flammenstreak in Tagen statt Wochen, Titel „Übungen lange nicht trainiert“ | ✅ umgesetzt | 17.11.2026 | [C14a.md](C14a.md) |
 | C15 | Design-Abstimmung und finale Kontrolle aller neuen Features | ⏳ offen | – | – |
 
 ### Für später vorgemerkt (Flowstate C)

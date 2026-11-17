@@ -188,8 +188,9 @@ export function BestsCard({ stopwatch, gym, showGym }: { stopwatch: StopwatchBes
 /** C14 (8): Übungen, die seit über 30 Tagen nicht durchgeführt wurden – ehrlich erst ab genug Verlauf. */
 export function StaleCard({ result }: { result: StaleResult }) {
   return (
-    <section className={cardClass} aria-label="Lange nicht trainiert">
-      <CardTitle icon={<Hourglass size={18} />}>Lange nicht trainiert</CardTitle>
+    <section className={cardClass} aria-label="Übungen lange nicht trainiert">
+      {/* C14a: Titel nennt jetzt ausdrücklich „Übungen“ (Abstimmung im Team). */}
+      <CardTitle icon={<Hourglass size={18} />}>Übungen lange nicht trainiert</CardTitle>
       {!result.available ? (
         <EmptyLine>
           {result.availableFrom

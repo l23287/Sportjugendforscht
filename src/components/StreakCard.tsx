@@ -14,7 +14,9 @@ import { formatLongDay } from '../lib/calendar';
 // C14: Stufen des Aktivitäts-Kalenders. Leer = dunkle Fläche; aktiv ≥ 3:1 dagegen (geprüft), dann kräftiger.
 const LEVEL_CLASS = ['bg-bg-soft', 'bg-flame/55', 'bg-flame/80', 'bg-flame'] as const;
 
-const weeksLabel = (n: number) => (n === 1 ? '1 Woche' : `${n} Wochen`);
+// C14a: Streak in Tagen.
+const daysLabel = (n: number) => (n === 1 ? '1 Tag' : `${n} Tagen`);
+const daysCount = (n: number) => (n === 1 ? '1 Tag' : `${n} Tage`);
 
 export function StreakCard() {
   const { streakActivity, trackingStartKey } = useAppData();
@@ -41,27 +43,28 @@ export function StreakCard() {
           <p className="whitespace-nowrap font-display text-2xl font-extrabold leading-tight text-ink sm:text-3xl">
             {active ? (
               <>
-                <span className="text-flame">{streak.current}</span> {streak.current === 1 ? 'Woche' : 'Wochen'} in Folge
+                <span className="text-flame">{streak.current}</span> {streak.current === 1 ? 'Tag' : 'Tage'} in Folge
               </>
             ) : (
               'Noch keine Serie'
             )}
           </p>
           <p className="mt-1 text-sm text-muted">
-            {/* C14: Hinweis bei „offener“ Woche – freundlich, nicht alarmierend. */}
+            {/* C14: Hinweis bei „offener“ Woche – freundlich, nicht alarmierend.
+                C14a: jetzt bezogen auf heute. */}
             {!active
               ? 'Beende eine Übung, um deine Serie zu starten.'
               : streak.atRisk
-                ? 'Diese Woche noch offen – beende eine Übung, um die Serie zu halten.'
-                : `Diese Woche: ${streak.thisWeek} ${streak.thisWeek === 1 ? 'Aktivität' : 'Aktivitäten'}`}
+                ? 'Heute noch offen – beende eine Übung, um die Serie zu halten.'
+                : `Heute: ${streak.today} ${streak.today === 1 ? 'Aktivität' : 'Aktivitäten'}`}
           </p>
-          <p className="mt-0.5 text-xs text-muted-2">Längste Serie: {weeksLabel(streak.longest)} · alle Sportarten</p>
+          <p className="mt-0.5 text-xs text-muted-2">Längste Serie: {daysCount(streak.longest)} · alle Sportarten</p>
         </div>
       </div>
 
       {/* C14: Aktivitäts-Kalender der letzten 12 Wochen (Spalten = Wochen, Zeilen = Mo–So). */}
       <div className="min-w-0 flex-1">
-        <div className="flex gap-1.5 overflow-x-auto pb-1" role="img" aria-label={`Aktivität der letzten 12 Wochen, aktuelle Serie ${weeksLabel(streak.current)}`}>
+        <div className="flex gap-1.5 overflow-x-auto pb-1" role="img" aria-label={`Aktivität der letzten 12 Wochen, aktuelle Serie ${daysLabel(streak.current)}`}>
           <div className="flex shrink-0 flex-col gap-1 pr-1 text-[10px] leading-3 text-muted-2" aria-hidden="true">
             {['Mo', '', 'Mi', '', 'Fr', '', 'So'].map((label, i) => (
               <span key={i} className="h-3.5">

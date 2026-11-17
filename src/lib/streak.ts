@@ -1,4 +1,7 @@
-// C14: Flammenstreak – WOCHEN-Streak (Abstimmung im Team).
+// C14a: Umgestellt auf einen TAGES-Streak (Abstimmung im Team nach C14): Ein Tag zählt als aktiv, wenn darin mindestens
+// eine Übung beendet oder neu erstellt wurde. Heute ohne Aktivität ist „noch offen“; die Serie reißt erst, wenn ein
+// ganzer Tag ohne Aktivität vergangen ist. Global, berechnet, zeitzonensicher – wie in C14.
+// (Ursprünglich C14:) Flammenstreak – WOCHEN-Streak (Abstimmung im Team).
 // Eine Woche (Montag–Sonntag) zählt als aktiv, wenn darin mindestens eine Übung BEENDET (Abschluss-Protokoll aus C11)
 // oder NEU ERSTELLT wurde. Der Streak reißt erst, wenn eine ganze Woche ohne Aktivität vergangen ist – Ruhetage gehören
 // zum Training. Er gilt für die PERSON über alle Sportarten und wird aus dem Verlauf BERECHNET (nie als Zahl
@@ -38,42 +41,38 @@ export function activityByDay(log: Pick<ExerciseLogEntry, 'completedAt'>[], exer
 }
 
 export interface StreakInfo {
-  /** Aktuelle Serie in Wochen (0 = keine). */
+  /** C14a: Aktuelle Serie in Tagen (0 = keine). */
   current: number;
-  /** Längste Serie in Wochen. */
+  /** C14a: Längste Serie in Tagen. */
   longest: number;
-  /** Aktivitäten in der laufenden Woche. */
-  thisWeek: number;
-  /** true, wenn die Serie läuft, diese Woche aber noch keine Aktivität hatte („noch offen“). */
+  /** C14a: Aktivitäten heute. */
+  today: number;
+  /** C14a: true, wenn die Serie bis gestern läuft, heute aber noch keine Aktivität hatte („noch offen“). */
   atRisk: boolean;
 }
 
-/** C14: Streak aus den aktiven Tagen berechnen. */
+/** C14a: Tages-Streak aus den aktiven Tagen berechnen (vorher C14: Wochen). */
 export function computeStreak(activity: Map<DateKey, number>, today: DateKey): StreakInfo {
-  const activeWeeks = new Set<DateKey>();
-  for (const [day, count] of activity) if (count > 0 && day <= today) activeWeeks.add(weekStartOf(day));
+  const activeDays = new Set<DateKey>();
+  for (const [day, count] of activity) if (count > 0 && day <= today) activeDays.add(day);
 
-  const thisWeekStart = weekStartOf(today);
-  let thisWeek = 0;
-  for (const [day, count] of activity) if (day >= thisWeekStart && day <= today) thisWeek += count;
-
-  // Laufende Woche ohne Aktivität beendet die Serie noch nicht – sie ist dann nur „offen“.
-  let cursor = activeWeeks.has(thisWeekStart) ? thisWeekStart : addDays(thisWeekStart, -7);
+  // Heute ohne Aktivität beendet die Serie noch nicht – der Tag ist nur „offen“.
+  let cursor = activeDays.has(today) ? today : addDays(today, -1);
   let current = 0;
-  while (activeWeeks.has(cursor)) {
+  while (activeDays.has(cursor)) {
     current += 1;
-    cursor = addDays(cursor, -7);
+    cursor = addDays(cursor, -1);
   }
 
-  const sorted = [...activeWeeks].sort();
+  const sorted = [...activeDays].sort();
   let longest = 0;
   let run = 0;
-  sorted.forEach((week, index) => {
-    run = index > 0 && daysBetween(sorted[index - 1], week) === 7 ? run + 1 : 1;
+  sorted.forEach((day, index) => {
+    run = index > 0 && daysBetween(sorted[index - 1], day) === 1 ? run + 1 : 1;
     longest = Math.max(longest, run);
   });
 
-  return { current, longest, thisWeek, atRisk: current > 0 && !activeWeeks.has(thisWeekStart) };
+  return { current, longest, today: activity.get(today) ?? 0, atRisk: current > 0 && !activeDays.has(today) };
 }
 
 /** C14: Tage für den Aktivitäts-Kalender – 12 volle Wochen bis einschließlich der laufenden (Spalten = Wochen). */
