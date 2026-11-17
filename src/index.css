@@ -21,6 +21,9 @@
   --color-accent-dark: #0369a1;
   --color-sun: #7dd3fc;
   --color-danger: #f87171;
+  /* C14: Flammenfarbe – AUSSCHLIESSLICH für den Flammenstreak (Flamme, Streak-Zahl, Aktivitäts-Kalender).
+     Einzige warme Akzentfarbe in der sonst blauen App; Kontrast ≥ 5,5:1 auf allen App-Hintergründen. */
+  --color-flame: #fb923c;
 
   --color-ink: #eef2fb;
   --color-muted: #a1b1d1;

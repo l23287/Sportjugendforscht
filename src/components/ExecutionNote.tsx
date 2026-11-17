@@ -1,14 +1,16 @@
 // C13: Notiz-Bereich in der Ausführung (Timer und Satz-Ansicht). Zugeklappt nur ein dezenter, runder Button „Notiz“
 // (Stil wie „Satz hinzufügen“), damit die Hauptaktionen des Trainings im Vordergrund bleiben. Timer bzw. Satzpause
 // laufen beim Schreiben weiter. Escape im Textfeld speichert und klappt zu – es schließt NICHT die ganze Übung.
-import type { KeyboardEvent } from 'react';
+import type { KeyboardEvent, ReactNode } from 'react';
 import { Check, StickyNote } from 'lucide-react';
 import type { ExecutionNoteState } from '../hooks/useExecutionNote';
 import { labelClass, textareaClass } from '../lib/formStyles';
 import { MAX_NOTE_LENGTH } from '../lib/notes';
 
-export function ExecutionNote({ note }: { note: ExecutionNoteState }) {
-  if (!note.available) return null;
+// C14: `leading` – optionale weitere runde Aktion (z. B. „Als erledigt markieren“), die in DERSELBEN Reihe vor „Notiz“
+// steht, damit die Nebenaktionen nicht untereinander stapeln.
+export function ExecutionNote({ note, leading }: { note: ExecutionNoteState; leading?: ReactNode }) {
+  if (!note.available) return leading ? <div className="mt-4 flex justify-center">{leading}</div> : null;
 
   function saveAndCollapse() {
     if (note.save()) note.setOpen(false);
@@ -25,7 +27,8 @@ export function ExecutionNote({ note }: { note: ExecutionNoteState }) {
 
   if (!note.open) {
     return (
-      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-1">
+      <div className="mt-4 flex flex-wrap items-center justify-center gap-x-3 gap-y-2">
+        {leading}
         <button
           type="button"
           onClick={() => note.setOpen(true)}
@@ -45,6 +48,9 @@ export function ExecutionNote({ note }: { note: ExecutionNoteState }) {
   }
 
   return (
+    <>
+    {/* C14: Bei offener Notiz bleibt die weitere Aktion darüber erreichbar. */}
+    {leading && <div className="mt-4 flex justify-center">{leading}</div>}
     <div className="mt-4 flex flex-col gap-2 text-left">
       <label className={labelClass} htmlFor="execution-note">
         Notiz zu dieser Übung
@@ -79,5 +85,6 @@ export function ExecutionNote({ note }: { note: ExecutionNoteState }) {
         </button>
       </div>
     </div>
+    </>
   );
 }

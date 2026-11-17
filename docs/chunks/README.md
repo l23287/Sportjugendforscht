@@ -56,5 +56,10 @@ Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
 | C11a | Nachbesserung: Gewicht in der Ausführung in 0,5-kg-Schritten statt 2,5 kg | ✅ umgesetzt | 17.11.2026 | [C11a.md](C11a.md) |
 | C12 | Stoppuhr im Übungsbereich (Hundertstel), bis zu 10 benannte Werte je Sportart, Bestwert | ✅ umgesetzt | 17.11.2026 | [C12.md](C12.md) |
 | C13 | Notizen in der Ausführung (automatisch gespeichert), als Verlauf im Plandetail | ✅ umgesetzt | 17.11.2026 | [C13.md](C13.md) |
-| C14 | Statistiken erweitern, Flammenstreak (steigt bei beendeter/neu erstellter Übung) | ⏳ offen | – | – |
+| C14 | Statistiken erweitern (Woche/Monat, Planerfüllung, Bestwerte, Kernziele, lange nicht trainiert) und wöchentlicher Flammenstreak | ✅ umgesetzt | 17.11.2026 | [C14.md](C14.md) |
 | C15 | Design-Abstimmung und finale Kontrolle aller neuen Features | ⏳ offen | – | – |
+
+### Für später vorgemerkt (Flowstate C)
+
+- Aus C14 (Punkte 9–13 der Statistik-Liste): Trainingsvolumen, Verlauf der Aufschlag-Quote, Lieblings-Trainingstag,
+  Hinweis „Neuer Bestwert!“, Notizen-Feed in den Statistiken.

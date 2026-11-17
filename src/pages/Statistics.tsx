@@ -12,12 +12,36 @@ import { useSport } from '../context/SportContext';
 import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
+// C14: Flammenstreak und erweiterte Kennzahlen.
+import { StreakCard } from '../components/StreakCard';
+import { BestsCard, GoalsCard, PeriodTiles, PlanFulfillmentCard, StaleCard } from '../components/StatisticsInsights';
+import { gymProgress, periodSummary, planFulfillment, staleExercises, stopwatchBests } from '../lib/insights';
+import { weekStartOf } from '../lib/streak';
+import { addDays } from '../lib/recurrence';
+import { todayKey } from '../lib/dateKey';
+import { formatDate as formatDay } from '../lib/time';
+import { hasStrengthTraining } from '../lib/sport';
 
 const MAX_NAMED_SLICES = 5;
 
 export function Statistics() {
-  const { plans, exercises } = useAppData();
+  const { plans, exercises, exerciseLog, stopwatchValues, goals, trackingStartKey } = useAppData();
   const { sport } = useSport();
+
+  // C14: Erweiterte Kennzahlen der aktiven Sportart (Protokoll ist bereits nach Sportart gefiltert).
+  const today = todayKey();
+  const week = periodSummary(exerciseLog, exercises, weekStartOf(today), today);
+  const month = periodSummary(exerciseLog, exercises, `${today.slice(0, 8)}01`, today);
+  // Planerfüllung: letzte 4 Wochen, frühestens ab Beginn der Verlaufsdaten (ehrlich – vorher gab es kein Protokoll).
+  const fourWeeksAgo = addDays(today, -27);
+  const fulfillmentFrom = trackingStartKey && trackingStartKey > fourWeeksAgo ? trackingStartKey : fourWeeksAgo;
+  const fulfillment = planFulfillment(plans, exerciseLog, fulfillmentFrom, today);
+  const fulfillmentLabel = !trackingStartKey
+    ? null
+    : fulfillmentFrom === fourWeeksAgo
+      ? 'der letzten 4 Wochen'
+      : `seit ${formatDay(fulfillmentFrom)}`;
+  const showGym = hasStrengthTraining(sport);
 
   const beginnerCount = exercises.filter((exercise) => exercise.difficulty === 'Anfänger').length;
   const advancedCount = exercises.filter((exercise) => exercise.difficulty === 'Fortgeschritten').length;
@@ -51,6 +75,12 @@ export function Statistics() {
         <p className="text-sm text-muted">Auswertung für {sport.name}</p>
       </header>
 
+      {/* C14: Flammenstreak ganz oben – gilt für die Person über alle Sportarten. */}
+      <StreakCard />
+
+      {/* C14 (2): Diese Woche / dieser Monat. */}
+      <PeriodTiles week={week} month={month} />
+
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatTile icon={<ClipboardList size={20} />} label="Trainingspläne" value={plans.length} />
         <StatTile icon={<Dumbbell size={20} />} label="Übungen" value={exercises.length} />
@@ -67,6 +97,18 @@ export function Statistics() {
           label="Sportart"
           value={sport.name}
         />
+      </div>
+
+      {/* C14 (4 + 7): Planerfüllung und Kernziele nebeneinander (ab lg). */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <PlanFulfillmentCard scheduled={fulfillment.scheduled} fulfilled={fulfillment.fulfilled} sinceLabel={fulfillmentLabel} />
+        <GoalsCard achieved={goals.filter((g) => g.achieved).length} total={goals.length} />
+      </div>
+
+      {/* C14 (5 + 6 + 8): Bestwerte (inkl. Gym-Steigerung) und „Lange nicht trainiert“. */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+        <BestsCard stopwatch={stopwatchBests(stopwatchValues)} gym={gymProgress(exerciseLog, exercises)} showGym={showGym} />
+        <StaleCard result={staleExercises(exercises, exerciseLog, today, trackingStartKey)} />
       </div>
 
       {/* C9: Abschnitt nur bei eingeschalteter Trainer-Funktion „Schwierigkeitsgrad“. */}

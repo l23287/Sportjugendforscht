@@ -25,6 +25,9 @@ import { useSport } from './SportContext';
 import { loadSportIdRemap, migrateSportId } from '../lib/sport';
 // C11: Sätze/Gewichte einlesen.
 import { sanitizeStrength } from '../lib/strength';
+// C14: Aktivität für den Flammenstreak (über alle Sportarten).
+import { activityByDay, trackingStart } from '../lib/streak';
+import type { DateKey } from '../lib/dateKey';
 // C13: Notizen zu Übungen.
 import { cleanNoteText, sanitizeNotes, validateNoteText } from '../lib/notes';
 // C12: Gespeicherte Stoppuhr-Werte.
@@ -82,6 +85,10 @@ interface AppDataContextValue {
   addStopwatchValue: (name: string, ms: number) => GoalResult;
   renameStopwatchValue: (id: string, name: string) => GoalResult;
   deleteStopwatchValue: (id: string) => void;
+  /** C14: Aktivität je Tag über ALLE Sportarten (beendete Übungen + neu erstellte, max. 1×/Tag) – für den Streak. */
+  streakActivity: Map<DateKey, number>;
+  /** C14: Erster protokollierter Tag (alle Sportarten) – Beginn der Verlaufsdaten. */
+  trackingStartKey: DateKey | null;
   /** C13: Notizen der AKTIVEN Sportart (über ihre Pläne getrennt). */
   exerciseNotes: ExerciseNote[];
   addExerciseNote: (planId: string, exerciseId: string, text: string) => GoalResult;
@@ -169,6 +176,10 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     return sanitizeNotes(loadJSON<unknown>('exerciseNotes', [])).map((n) => ({ ...n, sportId: remap.get(n.sportId) ?? n.sportId }));
   });
   useEffect(() => saveJSON('exerciseNotes', exerciseNotes), [exerciseNotes]);
+
+  // C14: Streak-Aktivität und Datenbeginn über alle Sportarten (die Person trainiert, nicht die Sportart).
+  const streakActivity = useMemo(() => activityByDay(exerciseLog, exercises), [exerciseLog, exercises]);
+  const trackingStartKey = useMemo(() => trackingStart(exerciseLog), [exerciseLog]);
 
   const sportStopwatchValues = useMemo(
     () => stopwatchValues.filter((v) => v.sportId === activeSportId),
@@ -267,6 +278,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         // C13: … und ihre Notizen.
         setExerciseNotes((prev) => prev.filter((n) => n.sportId !== sportId));
       },
+      streakActivity,
+      trackingStartKey,
       // C13: Notizen – Sportart kommt vom Plan; leere Notizen werden nicht gespeichert.
       exerciseNotes: exerciseNotes.filter((n) => n.sportId === activeSportId),
       addExerciseNote: (planId, exerciseId, text) => {
@@ -415,7 +428,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setServeSessions((prev) => prev.filter((session) => session.id !== id));
       },
     };
-  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog, stopwatchValues, sportStopwatchValues, exerciseNotes]);
+  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog, stopwatchValues, sportStopwatchValues, exerciseNotes, streakActivity, trackingStartKey]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

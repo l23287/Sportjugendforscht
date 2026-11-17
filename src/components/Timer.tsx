@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Pause, Play, RotateCcw, X } from 'lucide-react';
+import { CheckCircle2, Pause, Play, RotateCcw, X } from 'lucide-react';
 // C4: formatDuration für die Gesamtdauer in Uhrform.
 import { formatCountdown, formatDuration } from '../lib/time';
 import { useAppData } from '../context/AppDataContext';
@@ -170,8 +170,27 @@ export function Timer({ exercise, planId = null, onClose }: TimerProps) {
           </button>
         </div>
 
-        {/* C13: Notiz zur Übung – erscheint später im Plandetail. */}
-        <ExecutionNote note={note} />
+        {/* C13: Notiz zur Übung – erscheint später im Plandetail.
+            C14: Davor „Als erledigt markieren“ in derselben Reihe – im Training endet eine Übung oft vor dem Countdown.
+            Setzt den Timer auf 0; dadurch wird die Übung genau wie bei Ablauf einmal protokolliert (zählt für den Streak). */}
+        <ExecutionNote
+          note={note}
+          leading={
+            !isDone && (
+              <button
+                type="button"
+                onClick={() => {
+                  setRunning(false);
+                  setRemaining(0);
+                }}
+                className="inline-flex h-11 items-center gap-2 rounded-full border border-border bg-bg-soft px-4 text-sm font-semibold text-ink transition hover:bg-surface-2"
+              >
+                <CheckCircle2 size={16} className="text-accent" aria-hidden="true" />
+                Als erledigt
+              </button>
+            )
+          }
+        />
       </div>
     </div>
   );

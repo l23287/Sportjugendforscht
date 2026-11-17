@@ -13,6 +13,8 @@ import { PLAN_STATUS_META, PLAN_STATUS_ORDER, getPlanSchedule, type PlanStatus }
 import type { TrainingPlan } from '../types';
 // C8: Kernziele auf der Startseite.
 import { CoreGoalsPanel } from '../components/CoreGoalsPanel';
+// C14: Flammenstreak auf der Startseite.
+import { StreakBadge } from '../components/StreakBadge';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
 
@@ -58,6 +60,8 @@ export function PlansOverview() {
         {/* C2: Sporticon als SportBadge statt reinem Emoji. */}
         <p className="flex items-center gap-2 text-sm text-muted-2">
           <SportBadge sport={sport} size="xs" /> Willkommen zurück
+          {/* C14: Flammenstreak klein in der Begrüßungszeile – führt zur Statistik. */}
+          <StreakBadge />
         </p>
         <div className="flex flex-wrap items-center justify-between gap-4">
           <h1 className="font-display text-3xl font-extrabold text-ink">Trainingspläne</h1>

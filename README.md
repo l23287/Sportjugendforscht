@@ -25,7 +25,11 @@ bis zur Trainingsdurchführung mit Timer.
   und angezeigt auf der Startseite (C8).
 - **Trainer-Funktionen** – Zielgruppe und Schwierigkeitsgrad lassen sich in den Einstellungen ein- und ausschalten;
   gespeicherte Werte bleiben erhalten (C9); ein Hauptschalter schaltet alle gleichzeitig (C9a).
-- **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen.
+- **Statistiken** – Kennzahlen, Schwierigkeitsgrad-Verteilung, Donut-Chart der meistgenutzten Übungen; dazu
+  Woche/Monat, Planerfüllung, persönliche Bestwerte (Stoppuhr, Gym-Gewichte), Kernziele und „Lange nicht trainiert“
+  (C14).
+- **Flammenstreak** – zählt Wochen in Folge mit mindestens einer beendeten oder neu erstellten Übung (über alle
+  Sportarten), mit Aktivitäts-Kalender der letzten 12 Wochen und kleiner Flamme auf der Startseite (C14).
 - **Sportarten** – Vorauswahl von 25 Sportarten (Basis: DOSB-Bestandserhebung 2025) plus eigene Sportarten,
   die in den Einstellungen hinzugefügt und gelöscht werden können (C1). Jede Sportart hat ein eigenes
   Symbol und eine Farbe für die Umrandung des Sporticons; bei eigenen Sportarten frei wählbar (C2).
