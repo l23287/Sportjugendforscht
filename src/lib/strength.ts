@@ -8,8 +8,12 @@ export const MAX_REPS = 100;
 export const MAX_WEIGHT_KG = 500;
 /** C11: Gewichte in 0,5-kg-Schritten (kleinste übliche Hantelscheibe 0,25 kg je Seite). */
 export const WEIGHT_STEP_KG = 0.5;
-/** C11: Schritt der − / + Buttons in der Ausführung (eine 1,25-kg-Scheibe je Seite). */
-export const WEIGHT_BUTTON_STEP_KG = 2.5;
+/** C11: Schritt der − / + Buttons in der Ausführung.
+ *  C11a: 0,5 kg statt 2,5 kg (Abstimmung im Team) – feinere Steigerung, passend zur Eingabe in 0,5-kg-Schritten. */
+export const WEIGHT_BUTTON_STEP_KG = 0.5;
+
+/** C11a: Schrittweite als Text für Beschriftungen („0,5 kg“) – eine Quelle statt fest eingetragener Zahlen. */
+export const WEIGHT_BUTTON_STEP_LABEL = `${WEIGHT_BUTTON_STEP_KG.toLocaleString('de-DE')} kg`;
 export const MAX_REST_SECONDS = 10 * 60;
 export const DEFAULT_STRENGTH: StrengthSpec = {
   sets: [

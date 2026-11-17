@@ -1,6 +1,6 @@
 // C11: Neue Komponente – Ausführung einer Gym-Übung Satz für Satz.
 // Gleicher Dialog-Rahmen, gleiche Buttons und gleicher Ring wie der Übungs-Timer (Timer.tsx), damit beide Ausführungs-
-// Ansichten zusammenpassen. Für das Studio gebaut: große Zahlen, Treffflächen ≥ 56 px, Gewicht per − / + (2,5 kg)
+// Ansichten zusammenpassen. Für das Studio gebaut: große Zahlen, Treffflächen ≥ 56 px, Gewicht per − / + (C11a: 0,5 kg)
 // oder direkt eintippen. Nach „Satz erledigt“ startet die Satzpause automatisch als Countdown (Abstimmung im Team).
 // Am Ende: „Neue Gewichte für das nächste Mal übernehmen?“, falls Gewichte geändert wurden.
 import { useEffect, useRef, useState, type FormEvent } from 'react';
@@ -8,7 +8,7 @@ import { Check, Minus, Plus, SkipForward, X } from 'lucide-react';
 import type { Exercise } from '../types';
 import { useAppData } from '../context/AppDataContext';
 import { formatCountdown } from '../lib/time';
-import { formatWeight, parseWeightInput, stepWeight, weightToInput } from '../lib/strength';
+import { WEIGHT_BUTTON_STEP_LABEL, formatWeight, parseWeightInput, stepWeight, weightToInput } from '../lib/strength';
 
 type Phase = 'set' | 'rest' | 'done';
 
@@ -160,7 +160,8 @@ export function StrengthSession({ exercise, planId, onClose }: StrengthSessionPr
                 type="button"
                 onClick={() => changeCurrentWeight(stepWeight(currentWeight, -1))}
                 disabled={currentWeight === 0}
-                aria-label="Gewicht um 2,5 kg verringern"
+                // C11a: Schrittweite aus der zentralen Konstante.
+                aria-label={`Gewicht um ${WEIGHT_BUTTON_STEP_LABEL} verringern`}
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-bg-soft text-ink transition hover:bg-surface-2 disabled:opacity-30"
               >
                 <Minus size={20} />
@@ -198,7 +199,7 @@ export function StrengthSession({ exercise, planId, onClose }: StrengthSessionPr
               <button
                 type="button"
                 onClick={() => changeCurrentWeight(stepWeight(currentWeight, 1))}
-                aria-label="Gewicht um 2,5 kg erhöhen"
+                aria-label={`Gewicht um ${WEIGHT_BUTTON_STEP_LABEL} erhöhen`}
                 className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full border border-border bg-bg-soft text-ink transition hover:bg-surface-2"
               >
                 <Plus size={20} />

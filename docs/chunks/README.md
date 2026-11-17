@@ -53,6 +53,7 @@ Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
 | Chunk | Inhalt | Status | Datum | Doku |
 |-------|--------|--------|-------|------|
 | C11 | Gewichte, Sätze und Satzpausen für die Sportart Gym (Gewicht in der Ausführung anpassbar) | ✅ umgesetzt | 17.11.2026 | [C11.md](C11.md) |
+| C11a | Nachbesserung: Gewicht in der Ausführung in 0,5-kg-Schritten statt 2,5 kg | ✅ umgesetzt | 17.11.2026 | [C11a.md](C11a.md) |
 | C12 | Stoppuhr im Übungsbereich, bis zu 10 benannte Werte speichern | ⏳ offen | – | – |
 | C13 | Notizzettel in der Übungsansicht (Ausführung), später in der Plansansicht sichtbar | ⏳ offen | – | – |
 | C14 | Statistiken erweitern, Flammenstreak (steigt bei beendeter/neu erstellter Übung) | ⏳ offen | – | – |
