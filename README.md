@@ -13,6 +13,8 @@ bis zur Trainingsdurchführung mit Timer.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
   Die Dauer ist sekundengenau einstellbar und wird in Uhrform angezeigt, z. B. „1:30 Min.“ (C4).
   Bei Tischtennis zusätzlich der Reiter **Aufschlagtraining** (Live-Tracking gut/schlecht mit Verlaufsdiagramm, C3).
+- **Gym** – Sätze, Gewichte und Satzpausen je Übung; Ausführung Satz für Satz mit Gewicht ± und automatischer
+  Satzpause (C11).
 - **Kalender** – Monatsansicht der Pläne der aktiven Sportart; neuen Plan für einen Tag anlegen oder vorhandenen Plan
   auf einen Tag legen (C6). Pläne sind „Heute“, „Ausstehend“ oder „Vergangen“ (C6a). Pläne können eine Uhrzeit haben
   und sich wöchentlich (mit Wochentagen) oder monatlich wiederholen (C7); einzelne Termine lassen sich austragen (C7a).

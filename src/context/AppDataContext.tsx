@@ -4,6 +4,8 @@ import { DIFFICULTIES, type Difficulty } from '../types';
 import type {
   CoreGoal,
   Exercise,
+  ExerciseLogEntry,
+  StrengthSet,
   ExerciseInput,
   PlanInput,
   ServeResult,
@@ -18,7 +20,9 @@ import { loadJSON, saveJSON } from '../lib/storage';
 import { migrateDurationSeconds } from '../lib/time';
 // C5: Pläne/Übungen werden nach der aktiven Sportart getrennt.
 import { useSport } from './SportContext';
-import { migrateSportId } from '../lib/sport';
+import { loadSportIdRemap, migrateSportId } from '../lib/sport';
+// C11: Sätze/Gewichte einlesen.
+import { sanitizeStrength } from '../lib/strength';
 // C7: Uhrzeit und Wiederholung defensiv einlesen.
 import { sanitizeRecurrence, sanitizeTime } from '../lib/recurrence';
 // C8: Kernziele.
@@ -55,6 +59,12 @@ interface AppDataContextValue {
   toggleGoalAchieved: (id: string) => void;
   deleteGoal: (id: string) => void;
   moveGoal: (id: string, direction: -1 | 1) => void;
+  /** C11: Abschluss-Einträge ausgeführter Übungen der AKTIVEN Sportart (neueste zuerst) – Grundlage für C14. */
+  exerciseLog: ExerciseLogEntry[];
+  /** C11: Übung als beendet protokollieren (Timer abgelaufen bzw. alle Sätze erledigt). */
+  logExerciseCompleted: (exerciseId: string, planId: string | null, sets: StrengthSet[] | null) => void;
+  /** C11: Neue Gewichte aus der Ausführung in die Vorlage übernehmen (nur Gewichte, Wiederholungen bleiben). */
+  applyStrengthWeights: (exerciseId: string, weights: number[]) => void;
   /** C5: Löscht alle Pläne und Übungen einer Sportart (beim Löschen einer eigenen Sportart). */
   deleteSportData: (sportId: SportId) => void;
   serveSessions: ServeSession[];
@@ -78,7 +88,8 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
     if (!Array.isArray(stored)) return [];
     return (stored as TrainingPlan[]).map((plan) => ({
       ...plan,
-      sportId: migrateSportId(plan.sportId),
+      // C11: inkl. Umleitung zusammengeführter eigener Sportarten.
+      sportId: migrateSportId(plan.sportId, loadSportIdRemap()),
       // C7: Pläne vor C7 haben weder Uhrzeit noch Wiederholung → null. Eine Wiederholung ohne Startdatum ist ungültig.
       time: sanitizeTime(plan.time),
       recurrence: plan.date ? sanitizeRecurrence(plan.recurrence) : null,
@@ -94,19 +105,32 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       ...exercise,
       durationSeconds: migrateDurationSeconds({ durationSeconds: exercise.durationSeconds, durationMinutes }),
       // C5: Sportart ergänzen (vor C5 nicht vorhanden → Tischtennis).
-      sportId: migrateSportId(exercise.sportId),
+      sportId: migrateSportId(exercise.sportId, loadSportIdRemap()),
+      // C11: Sätze/Gewichte (nur bei Gym-Übungen vorhanden, sonst null).
+      strength: sanitizeStrength(exercise.strength),
       // C9: Schwierigkeitsgrad ist optional; Unbekanntes → null („ohne Angabe“) statt falscher Einordnung.
       difficulty: DIFFICULTIES.includes(exercise.difficulty as Difficulty) ? exercise.difficulty : null,
     }));
   });
   const [serveSessions, setServeSessions] = useState<ServeSession[]>(() => loadJSON('serveSessions', []));
   // C8: Alle Kernziele aller Sportarten (Reihenfolge im Array = Reihenfolge je Sportart).
-  const [coreGoals, setCoreGoals] = useState<CoreGoal[]>(() => sanitizeCoreGoals(loadJSON<unknown>('coreGoals', [])));
+  // C11: inkl. Umleitung zusammengeführter eigener Sportarten.
+  const [coreGoals, setCoreGoals] = useState<CoreGoal[]>(() => {
+    const remap = loadSportIdRemap();
+    return sanitizeCoreGoals(loadJSON<unknown>('coreGoals', [])).map((g) => ({ ...g, sportId: remap.get(g.sportId) ?? g.sportId }));
+  });
 
   useEffect(() => saveJSON('plans', plans), [plans]);
   useEffect(() => saveJSON('exercises', exercises), [exercises]);
   useEffect(() => saveJSON('serveSessions', serveSessions), [serveSessions]);
   useEffect(() => saveJSON('coreGoals', coreGoals), [coreGoals]);
+
+  // C11: Protokoll beendeter Übungen (alle Sportarten; nach außen gefiltert).
+  const [exerciseLog, setExerciseLog] = useState<ExerciseLogEntry[]>(() => {
+    const stored = loadJSON<unknown>('exerciseLog', []);
+    return Array.isArray(stored) ? (stored as ExerciseLogEntry[]).filter((e) => e && typeof e.exerciseId === 'string') : [];
+  });
+  useEffect(() => saveJSON('exerciseLog', exerciseLog), [exerciseLog]);
 
   // C5: Zentrale Filterung nach aktiver Sportart – keine Seite muss selbst filtern, keine kann es vergessen.
   const sportPlans = useMemo(() => plans.filter((p) => p.sportId === activeSportId), [plans, activeSportId]);
@@ -187,6 +211,30 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setExercises((prev) => prev.filter((e) => e.sportId !== sportId));
         // C8: Kernziele einer gelöschten eigenen Sportart werden mitgelöscht.
         setCoreGoals((prev) => prev.filter((g) => g.sportId !== sportId));
+        // C11: … ebenso ihr Übungsprotokoll.
+        setExerciseLog((prev) => prev.filter((e) => e.sportId !== sportId));
+      },
+      // C11: Protokoll und Gewichtsübernahme.
+      exerciseLog: exerciseLog.filter((e) => e.sportId === activeSportId),
+      logExerciseCompleted: (exerciseId, planId, sets) => {
+        const entry: ExerciseLogEntry = {
+          id: generateId(),
+          exerciseId,
+          sportId: exercises.find((e) => e.id === exerciseId)?.sportId ?? activeSportId,
+          planId,
+          completedAt: new Date().toISOString(),
+          sets,
+        };
+        setExerciseLog((prev) => [entry, ...prev]);
+      },
+      applyStrengthWeights: (exerciseId, weights) => {
+        setExercises((prev) =>
+          prev.map((e) =>
+            e.id === exerciseId && e.strength
+              ? { ...e, strength: { ...e.strength, sets: e.strength.sets.map((set, i) => ({ ...set, weightKg: weights[i] ?? set.weightKg })) } }
+              : e,
+          ),
+        );
       },
       // C8: Kernziele – immer nur innerhalb der aktiven Sportart.
       goals: sportGoals,
@@ -263,7 +311,7 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
         setServeSessions((prev) => prev.filter((session) => session.id !== id));
       },
     };
-  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals]);
+  }, [plans, exercises, sportPlans, sportExercises, activeSportId, serveSessions, coreGoals, sportGoals, exerciseLog]);
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;
 }

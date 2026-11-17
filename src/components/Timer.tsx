@@ -1,15 +1,20 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pause, Play, RotateCcw, X } from 'lucide-react';
 // C4: formatDuration für die Gesamtdauer in Uhrform.
 import { formatCountdown, formatDuration } from '../lib/time';
+import { useAppData } from '../context/AppDataContext';
 import type { Exercise } from '../types';
 
 interface TimerProps {
   exercise: Exercise;
+  /** C11: Plan, aus dem die Übung gestartet wurde (für das Protokoll). */
+  planId?: string | null;
   onClose: () => void;
 }
 
-export function Timer({ exercise, onClose }: TimerProps) {
+export function Timer({ exercise, planId = null, onClose }: TimerProps) {
+  // C11: Abgelaufene Übung als beendet protokollieren – Grundlage für den Flammenstreak (C14).
+  const { logExerciseCompleted } = useAppData();
   // C4: Dauer liegt bereits sekundengenau vor (vorher Minuten × 60).
   const totalSeconds = exercise.durationSeconds;
   const [remaining, setRemaining] = useState(totalSeconds);
@@ -43,6 +48,20 @@ export function Timer({ exercise, onClose }: TimerProps) {
   }, [onClose]);
 
   const isDone = remaining === 0;
+
+  // C11: Genau ein Eintrag pro abgelaufenem Durchlauf (nach „Neu starten“ wieder möglich). Die Merk-Variable
+  //      verhindert Doppeleinträge, wenn sich andere Abhängigkeiten ändern.
+  const loggedRun = useRef(false);
+  useEffect(() => {
+    if (!isDone) {
+      loggedRun.current = false;
+      return;
+    }
+    if (!loggedRun.current && totalSeconds > 0) {
+      loggedRun.current = true;
+      logExerciseCompleted(exercise.id, planId, null);
+    }
+  }, [isDone, totalSeconds, exercise.id, planId, logExerciseCompleted]);
   const progress = totalSeconds === 0 ? 1 : 1 - remaining / totalSeconds;
   const circumference = 2 * Math.PI * 45;
 

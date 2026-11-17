@@ -1,4 +1,6 @@
 import { Clock, Dumbbell, Pencil, Target, Trash2 } from 'lucide-react';
+// C11: Kurzbeschreibung der Sätze.
+import { StrengthSummary } from './StrengthSummary';
 import type { Exercise } from '../types';
 import { DifficultyBadge } from './DifficultyBadge';
 import { IconButton } from './IconButton';
@@ -37,6 +39,8 @@ export function ExerciseCard({ exercise, onEdit, onDelete }: ExerciseCardProps) 
           {/* C4: Dauer sekundengenau in Uhrform. */}
           <Clock size={13} /> {formatDuration(exercise.durationSeconds)}
         </span>
+        {/* C11: Sätze/Gewichte in derselben Meta-Zeile, z. B. „3 × 10 · 40 kg · Pause 1:30 Min.“ */}
+        {exercise.strength && <StrengthSummary spec={exercise.strength} />}
       </div>
 
       <div className="mt-1 flex gap-2">

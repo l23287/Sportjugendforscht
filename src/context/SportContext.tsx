@@ -10,6 +10,7 @@ import {
   isAllowedCustomEmoji,
   legacySportNameToId,
   sanitizeCustomSports,
+  loadSportIdRemap,
   validateSportName,
   type SportAppearance,
 } from '../lib/sport';
@@ -40,11 +41,15 @@ const SportContext = createContext<SportContextValue | null>(null);
 // Vor C1 lag unter 'trainerpro:sport' der Name (z. B. "Tischtennis"), jetzt unter 'trainerpro:sportId' die ID.
 function loadInitialSportId(): SportId {
   const stored = loadJSON<SportId | null>('sportId', null);
-  if (typeof stored === 'string') return stored;
+  // C11: War eine zusammengeführte eigene Sportart (z. B. eigene „Gym“) aktiv, gilt jetzt die Vorauswahl-Sportart.
+  if (typeof stored === 'string') return loadSportIdRemap().get(stored) ?? stored;
   return legacySportNameToId(loadJSON<unknown>('sport', null));
 }
 
 export function SportProvider({ children }: { children: ReactNode }) {
+  // C11: Umleitungstabelle sofort festhalten, BEVOR die bereinigten eigenen Sportarten gespeichert werden
+  //      (die App-Daten mit Plänen/Übungen/Kernzielen werden erst nach dem Zugangspasswort geladen).
+  useState(() => loadSportIdRemap());
   // C1: Eigene Sportarten werden getrennt von der festen Vorauswahl gespeichert.
   const [customSports, setCustomSports] = useState<Sport[]>(() =>
     sanitizeCustomSports(loadJSON<unknown>('customSports', [])),

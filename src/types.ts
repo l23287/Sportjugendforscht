@@ -17,6 +17,8 @@ export type SportCategory =
   | 'Ausdauer'
   | 'Wassersport'
   | 'Outdoor & Präzision'
+  // C11: Neue Kategorie für Gym.
+  | 'Kraft & Fitness'
   | 'Eigene';
 
 export const SPORT_CATEGORIES: SportCategory[] = [
@@ -27,6 +29,7 @@ export const SPORT_CATEGORIES: SportCategory[] = [
   'Ausdauer',
   'Wassersport',
   'Outdoor & Präzision',
+  'Kraft & Fitness',
   'Eigene',
 ];
 
@@ -54,6 +57,8 @@ export interface Exercise {
   difficulty: Difficulty | null;
   /** C5: Sportart, zu der die Übung gehört (stabile ID aus C1). Wird beim Anlegen automatisch gesetzt. */
   sportId: SportId;
+  /** C11: Sätze, Gewichte und Satzpause (nur bei Gym erfasst; sonst null). */
+  strength: StrengthSpec | null;
   createdAt: string;
 }
 
@@ -138,4 +143,27 @@ export interface CoreGoal {
   dueDate: string | null;
   achieved: boolean;
   createdAt: string;
+}
+
+// C11: Ein Satz einer Kraftübung. weightKg = 0 bedeutet Körpergewicht.
+export interface StrengthSet {
+  reps: number;
+  weightKg: number;
+}
+
+// C11: Vorlage einer Gym-Übung – eigene Werte je Satz (gleiche Sätze oder Pyramide) und eine Satzpause.
+export interface StrengthSpec {
+  sets: StrengthSet[];
+  restSeconds: number;
+}
+
+// C11: Abschluss-Eintrag einer ausgeführten Übung. Grundlage für den Flammenstreak und die Statistiken in C14
+// („erhöht sich, wenn eine Übung beendet wird“). Bei Gym mit den tatsächlich trainierten Sätzen/Gewichten.
+export interface ExerciseLogEntry {
+  id: string;
+  exerciseId: string;
+  sportId: SportId;
+  planId: string | null;
+  completedAt: string;
+  sets: StrengthSet[] | null;
 }

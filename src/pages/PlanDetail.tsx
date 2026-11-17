@@ -14,6 +14,9 @@ import { formatDuration } from '../lib/time';
 import { getPlanSchedule } from '../lib/planStatus';
 // C7: Serien-Beschreibung.
 import { describeRecurrence } from '../lib/recurrence';
+// C11: Satz-Ansicht für Gym-Übungen + Kurzbeschreibung + Protokoll.
+import { StrengthSession } from '../components/StrengthSession';
+import { StrengthSummary } from '../components/StrengthSummary';
 // C9: Schalter „Zielgruppe“.
 import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
@@ -138,6 +141,8 @@ export function PlanDetail() {
                     {/* C4: Dauer sekundengenau in Uhrform. */}
                     <Clock size={13} /> {formatDuration(exercise.durationSeconds)}
                   </span>
+                  {/* C11: Sätze/Gewichte neben der Dauer. */}
+                  {exercise.strength && <StrengthSummary spec={exercise.strength} className="w-full" />}
                 </div>
               </div>
               <button
@@ -164,7 +169,13 @@ export function PlanDetail() {
         }}
       />
 
-      {activeExercise && <Timer exercise={activeExercise} onClose={() => setActiveExercise(null)} />}
+      {/* C11: Gym-Übungen mit Sätzen öffnen die Satz-Ansicht, alle anderen wie bisher den Timer. */}
+      {activeExercise &&
+        (activeExercise.strength ? (
+          <StrengthSession exercise={activeExercise} planId={plan.id} onClose={() => setActiveExercise(null)} />
+        ) : (
+          <Timer exercise={activeExercise} planId={plan.id} onClose={() => setActiveExercise(null)} />
+        ))}
     </div>
   );
 }

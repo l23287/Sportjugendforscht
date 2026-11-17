@@ -1,3 +1,5 @@
+// C11: Speicherzugriff für die Umleitung zusammengeführter eigener Sportarten.
+import { loadJSON } from './storage';
 import type { Sport, SportId } from '../types';
 
 // C1: Vorauswahl von 25 Sportarten.
@@ -46,6 +48,9 @@ export const PRESET_SPORTS: Sport[] = [
   { id: 'golf', name: 'Golf', emoji: '⛳', color: '#4ade80', category: 'Outdoor & Präzision', custom: false },
   { id: 'schiesssport', name: 'Schießsport', emoji: '🎯', color: '#fb923c', category: 'Outdoor & Präzision', custom: false },
   { id: 'klettern', name: 'Klettern & Bergsport', emoji: '🧗', color: '#a8a29e', category: 'Outdoor & Präzision', custom: false },
+  // C11: Gym als 26. Sportart (Abstimmung im Team) – nicht Teil der DOSB-Liste, aber Voraussetzung für Sätze/Gewichte.
+  // Farbe Fuchsia: Kontrast ≥ 5,12:1 auf allen App-Hintergründen (Regel aus C2: ≥ 3:1).
+  { id: 'gym', name: 'Gym', emoji: '🏋️', color: '#e879f9', category: 'Kraft & Fitness', custom: false },
 ];
 
 export const DEFAULT_SPORT_ID: SportId = 'tischtennis';
@@ -168,6 +173,43 @@ export function hasServeTraining(sport: Pick<Sport, 'id'>): boolean {
 export const LEGACY_DATA_SPORT_ID: SportId = 'tischtennis';
 
 // C5: Liefert eine gültige Sportart-ID für gespeicherte Einträge (fehlend/ungültig → Tischtennis).
-export function migrateSportId(value: unknown): SportId {
-  return typeof value === 'string' && value.trim() !== '' ? value : LEGACY_DATA_SPORT_ID;
+// C11: Optional mit Umleitung zusammengeführter eigener Sportarten (z. B. eigene „Gym“ → Vorauswahl „gym“).
+export function migrateSportId(value: unknown, remap?: Map<SportId, SportId>): SportId {
+  const id = typeof value === 'string' && value.trim() !== '' ? value : LEGACY_DATA_SPORT_ID;
+  return remap?.get(id) ?? id;
+}
+
+// C11: Eigene Sportarten, deren Name inzwischen eine Vorauswahl-Sportart ist (z. B. eine selbst angelegte „Gym“ vor C11),
+// werden mit dieser zusammengeführt. Liefert alte ID → neue ID. Wird beim Laden aus den ROHEN gespeicherten Daten
+// berechnet – sanitizeCustomSports() verwirft solche Einträge, ihre Pläne/Übungen/Kernziele wandern über diese Tabelle mit.
+export function presetRemapForCustomSports(value: unknown): Map<SportId, SportId> {
+  const remap = new Map<SportId, SportId>();
+  if (!Array.isArray(value)) return remap;
+  for (const entry of value) {
+    if (!entry || typeof entry !== 'object') continue;
+    const { id, name } = entry as Partial<Sport>;
+    if (typeof id !== 'string' || typeof name !== 'string') continue;
+    const preset = PRESET_SPORTS.find((s) => normalizeSportName(s.name) === normalizeSportName(name));
+    if (preset) remap.set(id, preset.id);
+  }
+  return remap;
+}
+
+// C11: Die Tabelle wird beim ERSTEN Aufruf aus dem Speicher berechnet und für die Sitzung festgehalten.
+// Grund (im Test gefunden): Die App-Daten werden erst nach dem Zugangspasswort geladen – bis dahin hat der
+// SportProvider die bereinigten eigenen Sportarten bereits gespeichert, die Rohdaten wären also weg.
+// SportProvider ruft die Funktion deshalb sofort beim Start auf.
+let cachedRemap: Map<SportId, SportId> | null = null;
+
+/** C11: Umleitungstabelle zusammengeführter eigener Sportarten (alte ID → Vorauswahl-ID). */
+export function loadSportIdRemap(): Map<SportId, SportId> {
+  if (!cachedRemap) cachedRemap = presetRemapForCustomSports(loadJSON<unknown>('customSports', []));
+  return cachedRemap;
+}
+
+// C11: Sätze, Gewichte und Satzpausen gibt es nur bei Gym – Prüfung über die stabile ID wie beim Aufschlagtraining (C3).
+export const STRENGTH_SPORT_ID: SportId = 'gym';
+
+export function hasStrengthTraining(sport: Pick<Sport, 'id'>): boolean {
+  return sport.id === STRENGTH_SPORT_ID;
 }
