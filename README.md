@@ -49,6 +49,10 @@ npm run build    # Typecheck + Produktionsbuild
 npm run lint     # oxlint
 ```
 
+`npm run dev` und `npm run build` prüfen vorher automatisch, ob alle Pakete aus `package.json` installiert sind, und
+führen sonst `npm install` aus (`scripts/ensure-deps.mjs`, C16a). Nach einem `git pull` mit neuen Paketen ist also
+kein manueller Schritt nötig.
+
 ## Stack
 
 React 19 + TypeScript + Vite + Tailwind CSS v4 + React Router v7, Icons von `lucide-react`.
