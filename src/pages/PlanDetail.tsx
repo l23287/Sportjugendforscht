@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // C5: Navigate für die Weiterleitung bei Plänen einer anderen Sportart.
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Download, Dumbbell, Loader2, Pencil, Play, Repeat, StickyNote, Trash2, Users } from 'lucide-react';
+import { Navigate, useLocation, useNavigate, useParams } from 'react-router-dom';
+import { CheckCircle2, ChevronLeft, Clock, Copy, Download, Dumbbell, Loader2, Pencil, Play, Repeat, StickyNote, Trash2, Users } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -28,6 +28,8 @@ import type { Exercise } from '../types';
 // C16: Plan als PDF herunterladen (Sportart für Kopf und Farbstreifen).
 import { downloadPlanPdf } from '../lib/planPdf';
 import { useSport } from '../context/SportContext';
+// C17: Plan duplizieren.
+import { DuplicatePlanDialog, type PlanCopyState } from '../components/DuplicatePlanDialog';
 
 export function PlanDetail() {
   const { id } = useParams<{ id: string }>();
@@ -37,6 +39,9 @@ export function PlanDetail() {
   const { sport } = useSport();
   // C16: Zustand des PDF-Buttons – kurzer Ladekreis während der Erzeugung, ruhige Meldung bei Fehler.
   const [pdfState, setPdfState] = useState<'idle' | 'busy' | 'error'>('idle');
+  // C17: Dialog „Plan duplizieren“ und Hinweis auf der frisch erstellten Kopie.
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
+  const copiedFrom = (useLocation().state as PlanCopyState | null)?.copiedFrom;
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
   // C15: Übungen, deren Notizen aufgeklappt sind (anfangs keine).
@@ -88,7 +93,9 @@ export function PlanDetail() {
 
   return (
     <div className="flex flex-col gap-6 pb-10">
-      <div className="flex items-start gap-3">
+      {/* C17: flex-wrap – am Handy rutschen die (jetzt vier) Aktionen in eine eigene Zeile unter den Titel, damit der Titel
+          die volle Breite bekommt. Ab sm bleibt alles in einer Zeile. */}
+      <div className="flex flex-wrap items-start gap-3">
         <IconButton
           icon={<ChevronLeft size={18} />}
           label="Zurück"
@@ -96,11 +103,11 @@ export function PlanDetail() {
           className="mt-0.5 shrink-0"
         />
         {/* C16: Mit dem dritten Aktions-Button wird der Titel am Handy schmaler – deutsche Silbentrennung (lang="de")
-            statt hartem Umbruch mitten im Wort. */}
+            statt hartem Umbruch mitten im Wort. C17: Am Handy hat der Titel jetzt wieder die volle Breite. */}
         <h1 className="min-w-0 flex-1 break-words font-display text-2xl font-extrabold text-ink hyphens-auto sm:text-3xl">
           {plan.name}
         </h1>
-        <div className="flex shrink-0 items-center gap-2">
+        <div className="flex w-full shrink-0 items-center gap-2 pl-[52px] sm:w-auto sm:pl-0">
           {/* C16: PDF-Download – runder Icon-Button wie Bearbeiten/Löschen, fest an erster Stelle der Aktionen.
               Ohne Übungen deaktiviert (sonst entstünde eine leere PDF). */}
           <IconButton
@@ -130,9 +137,19 @@ export function PlanDetail() {
             label="Plan bearbeiten"
             onClick={() => navigate(`/plaene/${plan.id}/bearbeiten`)}
           />
+          {/* C17: Duplizieren zwischen Bearbeiten und Löschen – gleiche Reihenfolge wie auf der Plankarte. */}
+          <IconButton icon={<Copy size={16} />} label="Plan duplizieren" onClick={() => setDuplicateOpen(true)} />
           <IconButton icon={<Trash2 size={16} />} label="Plan löschen" onClick={() => setConfirmDelete(true)} />
         </div>
       </div>
+
+      {/* C17: Kurzer, ruhiger Hinweis auf der neuen Kopie. */}
+      {copiedFrom && (
+        <p role="status" className="-mt-3 flex items-center gap-2 text-sm text-muted">
+          <CheckCircle2 size={16} className="shrink-0 text-accent" aria-hidden="true" />
+          Kopie von „{copiedFrom}“ erstellt.
+        </p>
+      )}
 
       {/* C16: Ruhiger Hinweis statt Alarm, falls die PDF nicht erstellt werden konnte. */}
       {pdfState === 'error' && (
@@ -239,6 +256,8 @@ export function PlanDetail() {
           ))}
         </ol>
       )}
+
+      <DuplicatePlanDialog plan={duplicateOpen ? plan : null} onClose={() => setDuplicateOpen(false)} />
 
       <ConfirmDialog
         open={confirmDelete}

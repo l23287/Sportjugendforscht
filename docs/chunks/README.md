@@ -75,7 +75,7 @@ Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
 |-------|--------|--------|-------|------|
 | C16 | Plan als PDF herunterladen (A4 hochkant, Button im Plandetail) | ✅ umgesetzt | 22.11.2026 | [C16.md](C16.md) |
 | C16a | Fix: fehlendes Paket „jspdf“ nach `git pull` – automatische Paketprüfung vor `dev`/`build` | ✅ umgesetzt | 22.11.2026 | [C16a.md](C16a.md) |
-| C17 | Pläne per Button duplizieren | ⏳ offen | – | – |
+| C17 | Pläne duplizieren (Dialog mit Name „(Kopie)“ und Datum, Wiederholung standardmäßig aus; Plankarte + Plandetail) | ✅ umgesetzt | 22.11.2026 | [C17.md](C17.md) |
 | C18 | Favoriten: häufig genutzte Übungen in der Planerstellung oben und leicht hervorgehoben | ⏳ offen | – | – |
 | C19 | Erinnerungen in der App: Hinweis auf der Startseite 15 Min. vor Trainingsbeginn | ⏳ offen | – | – |
 | C20 | Export/Backup aller Daten in den Einstellungen | ⏳ offen | – | – |

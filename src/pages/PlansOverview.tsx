@@ -17,6 +17,8 @@ import { CoreGoalsPanel } from '../components/CoreGoalsPanel';
 import { StreakBadge } from '../components/StreakBadge';
 // C2: Einheitliches Sporticon mit farbiger Umrandung.
 import { SportBadge } from '../components/SportBadge';
+// C17: Pläne duplizieren.
+import { DuplicatePlanDialog } from '../components/DuplicatePlanDialog';
 
 export function PlansOverview() {
   const { plans, exercises, deletePlan } = useAppData();
@@ -24,6 +26,8 @@ export function PlansOverview() {
   const navigate = useNavigate();
   const [query, setQuery] = useState('');
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+  // C17: Plan, für den der Dialog „Plan duplizieren“ offen ist.
+  const [duplicateId, setDuplicateId] = useState<string | null>(null);
 
   const filteredPlans = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -113,6 +117,7 @@ export function PlansOverview() {
                     exercises={exercises}
                     onEdit={() => navigate(`/plaene/${plan.id}/bearbeiten`)}
                     onDelete={() => setPendingDeleteId(plan.id)}
+                    onDuplicate={() => setDuplicateId(plan.id)}
                   />
                 ))}
               </div>
@@ -120,6 +125,9 @@ export function PlansOverview() {
           ))}
         </div>
       )}
+
+      {/* C17: Gemeinsamer Dialog – führt nach dem Duplizieren direkt zur Kopie. */}
+      <DuplicatePlanDialog plan={plans.find((p) => p.id === duplicateId) ?? null} onClose={() => setDuplicateId(null)} />
 
       <ConfirmDialog
         open={Boolean(pendingDeletePlan)}

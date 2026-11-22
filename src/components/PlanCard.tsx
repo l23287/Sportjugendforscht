@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ClipboardList, Clock, ListChecks, Pencil, Repeat, Trash2, Users } from 'lucide-react';
+import { ClipboardList, Clock, Copy, ListChecks, Pencil, Repeat, Trash2, Users } from 'lucide-react';
 import type { Exercise, TrainingPlan } from '../types';
 import { formatDuration } from '../lib/time';
 // C6a: Status „Heute / Ausstehend / Vergangen“ statt „Überfällig“.
@@ -16,9 +16,11 @@ interface PlanCardProps {
   exercises: Exercise[];
   onEdit: () => void;
   onDelete: () => void;
+  /** C17: Öffnet den Dialog „Plan duplizieren“. */
+  onDuplicate: () => void;
 }
 
-export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
+export function PlanCard({ plan, exercises, onEdit, onDelete, onDuplicate }: PlanCardProps) {
   const planExercises = plan.exerciseIds
     .map((exerciseId) => exercises.find((e) => e.id === exerciseId))
     .filter((e): e is Exercise => Boolean(e));
@@ -79,6 +81,8 @@ export function PlanCard({ plan, exercises, onEdit, onDelete }: PlanCardProps) {
           Anzeigen
         </Link>
         <IconButton icon={<Pencil size={16} />} label="Plan bearbeiten" onClick={onEdit} />
+        {/* C17: Duplizieren zwischen Bearbeiten und Löschen – Löschen bleibt immer ganz rechts. */}
+        <IconButton icon={<Copy size={16} />} label="Plan duplizieren" onClick={onDuplicate} />
         <IconButton icon={<Trash2 size={16} />} label="Plan löschen" onClick={onDelete} />
       </div>
     </div>
