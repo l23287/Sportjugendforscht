@@ -66,3 +66,15 @@ Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
 
 - Aus C14 (Punkte 9–13 der Statistik-Liste): Trainingsvolumen, Verlauf der Aufschlag-Quote, Lieblings-Trainingstag,
   Hinweis „Neuer Bestwert!“, Notizen-Feed in den Statistiken.
+
+## Flowstate D (Phase 4)
+
+Läuft weiter auf dem Branch `phase-1` und wird in diesem Ordner dokumentiert.
+
+| Chunk | Inhalt | Status | Datum | Doku |
+|-------|--------|--------|-------|------|
+| C16 | Plan als PDF herunterladen (A4 hochkant, Button im Plandetail) | ✅ umgesetzt | 22.11.2026 | [C16.md](C16.md) |
+| C17 | Pläne per Button duplizieren | ⏳ offen | – | – |
+| C18 | Favoriten: häufig genutzte Übungen in der Planerstellung oben und leicht hervorgehoben | ⏳ offen | – | – |
+| C19 | Erinnerungen in der App: Hinweis auf der Startseite 15 Min. vor Trainingsbeginn | ⏳ offen | – | – |
+| C20 | Export/Backup aller Daten in den Einstellungen | ⏳ offen | – | – |

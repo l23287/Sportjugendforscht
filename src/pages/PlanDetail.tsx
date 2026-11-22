@@ -1,7 +1,7 @@
 import { useState } from 'react';
 // C5: Navigate für die Weiterleitung bei Plänen einer anderen Sportart.
 import { Navigate, useNavigate, useParams } from 'react-router-dom';
-import { ChevronLeft, Clock, Dumbbell, Pencil, Play, Repeat, StickyNote, Trash2, Users } from 'lucide-react';
+import { ChevronLeft, Clock, Download, Dumbbell, Loader2, Pencil, Play, Repeat, StickyNote, Trash2, Users } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { IconButton } from '../components/IconButton';
 import { PrimaryButton } from '../components/PrimaryButton';
@@ -25,12 +25,18 @@ import { CollapseChevron } from '../components/Collapsible';
 import { useTrainerFeatures } from '../context/TrainerFeaturesContext';
 import { PlanStatusBadge } from '../components/PlanStatusBadge';
 import type { Exercise } from '../types';
+// C16: Plan als PDF herunterladen (Sportart für Kopf und Farbstreifen).
+import { downloadPlanPdf } from '../lib/planPdf';
+import { useSport } from '../context/SportContext';
 
 export function PlanDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getPlan, getPlanSportId, exercises, deletePlan, exerciseNotes } = useAppData();
   const { features } = useTrainerFeatures();
+  const { sport } = useSport();
+  // C16: Zustand des PDF-Buttons – kurzer Ladekreis während der Erzeugung, ruhige Meldung bei Fehler.
+  const [pdfState, setPdfState] = useState<'idle' | 'busy' | 'error'>('idle');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [activeExercise, setActiveExercise] = useState<Exercise | null>(null);
   // C15: Übungen, deren Notizen aufgeklappt sind (anfangs keine).
@@ -89,10 +95,36 @@ export function PlanDetail() {
           onClick={() => navigate('/plaene')}
           className="mt-0.5 shrink-0"
         />
-        <h1 className="min-w-0 flex-1 break-words font-display text-2xl font-extrabold text-ink sm:text-3xl">
+        {/* C16: Mit dem dritten Aktions-Button wird der Titel am Handy schmaler – deutsche Silbentrennung (lang="de")
+            statt hartem Umbruch mitten im Wort. */}
+        <h1 className="min-w-0 flex-1 break-words font-display text-2xl font-extrabold text-ink hyphens-auto sm:text-3xl">
           {plan.name}
         </h1>
         <div className="flex shrink-0 items-center gap-2">
+          {/* C16: PDF-Download – runder Icon-Button wie Bearbeiten/Löschen, fest an erster Stelle der Aktionen.
+              Ohne Übungen deaktiviert (sonst entstünde eine leere PDF). */}
+          <IconButton
+            icon={pdfState === 'busy' ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}
+            label={planExercises.length === 0 ? 'Als PDF herunterladen – erst Übungen hinzufügen' : 'Als PDF herunterladen'}
+            disabled={planExercises.length === 0 || pdfState === 'busy'}
+            aria-busy={pdfState === 'busy'}
+            className="disabled:cursor-not-allowed disabled:opacity-40"
+            onClick={async () => {
+              setPdfState('busy');
+              try {
+                await downloadPlanPdf({
+                  plan,
+                  exercises: planExercises,
+                  sport,
+                  showTargetGroup: features.targetGroup,
+                  showDifficulty: features.difficulty,
+                });
+                setPdfState('idle');
+              } catch {
+                setPdfState('error');
+              }
+            }}
+          />
           <IconButton
             icon={<Pencil size={16} />}
             label="Plan bearbeiten"
@@ -101,6 +133,13 @@ export function PlanDetail() {
           <IconButton icon={<Trash2 size={16} />} label="Plan löschen" onClick={() => setConfirmDelete(true)} />
         </div>
       </div>
+
+      {/* C16: Ruhiger Hinweis statt Alarm, falls die PDF nicht erstellt werden konnte. */}
+      {pdfState === 'error' && (
+        <p role="status" className="-mt-3 text-sm text-muted">
+          Die PDF konnte nicht erstellt werden. Bitte versuche es noch einmal.
+        </p>
+      )}
 
       <div className="flex flex-col gap-4 rounded-3xl border border-border bg-surface p-5">
         <div className="flex flex-wrap items-center gap-2">

@@ -13,6 +13,7 @@ bis zur Trainingsdurchführung mit Timer.
 - **Übungen** – eigene Tischtennis-Übungsdatenbank (Name, Beschreibung, Ziel, Dauer, Schwierigkeitsgrad).
   Die Dauer ist sekundengenau einstellbar und wird in Uhrform angezeigt, z. B. „1:30 Min.“ (C4).
   Bei Tischtennis zusätzlich der Reiter **Aufschlagtraining** (Live-Tracking gut/schlecht mit Verlaufsdiagramm, C3).
+- **PDF** – jeder Plan lässt sich im Plandetail als PDF (A4 hochkant, mit Abhak-Kästchen) herunterladen (C16).
 - **Notizen** – während der Ausführung notieren (automatisch gespeichert), als Verlauf je Übung im Plandetail (C13), dort ein- und ausklappbar (C15).
 - **Stoppuhr** – im Übungsbereich, auf Hundertstel genau, läuft bei Seitenwechsel weiter; bis zu 10 benannte Werte je
   Sportart mit Bestwert (C12).
