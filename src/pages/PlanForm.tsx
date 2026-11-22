@@ -17,7 +17,7 @@ type RepeatOption = 'Keine' | 'Wöchentlich' | 'Monatlich';
 const REPEAT_OPTIONS: RepeatOption[] = ['Keine', 'Wöchentlich', 'Monatlich'];
 type EndOption = 'Nie' | 'Am Datum';
 const END_OPTIONS: EndOption[] = ['Nie', 'Am Datum'];
-import { ArrowDown, ArrowUp, CalendarX, Check, ChevronLeft, Plus, Repeat, Undo2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, CalendarX, Check, ChevronLeft, Plus, Repeat, Star, Undo2, X } from 'lucide-react';
 import { useAppData } from '../context/AppDataContext';
 import { PrimaryButton } from '../components/PrimaryButton';
 import { IconButton } from '../components/IconButton';
@@ -26,6 +26,8 @@ import { DifficultyBadge } from '../components/DifficultyBadge';
 import { inputClass, labelClass, selectClass, textareaClass } from '../lib/formStyles';
 import { formatDuration } from '../lib/time';
 import type { Exercise, PlanInput } from '../types';
+// C18: Favoriten im Übungspool.
+import { favoriteIds, usageScores } from '../lib/favorites';
 
 // C5: Schutz vor dem Formular. Wird `/plaene/<id>/bearbeiten` mit einem Plan aufgerufen, der nicht zur aktiven
 // Sportart gehört (oder nicht existiert), geht es zur Übersicht. Vorher wäre stattdessen ein leeres
@@ -43,7 +45,7 @@ export function PlanForm() {
 function PlanFormContent() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { exercises, plans, addPlan, updatePlan } = useAppData();
+  const { exercises, plans, addPlan, updatePlan, exerciseLog } = useAppData();
   const editingPlan = id ? plans.find((plan) => plan.id === id) : undefined;
   const isEditing = Boolean(editingPlan);
 
@@ -89,6 +91,25 @@ function PlanFormContent() {
       .filter((exercise) => !exerciseIds.includes(exercise.id))
       .filter((exercise) => !q || exercise.name.toLowerCase().includes(q));
   }, [exercises, exerciseIds, poolQuery]);
+
+  // C18: Favoriten = die (höchstens 5) meistgenutzten Übungen der Sportart (Pläne + Ausführungen der letzten 8 Wochen).
+  // Ausgewählte Favoriten verschwinden wie jede Übung aus dem Pool; sind alle ausgewählt, entfällt der Abschnitt.
+  const scores = useMemo(() => usageScores(exercises, plans, exerciseLog, todayKey()), [exercises, plans, exerciseLog]);
+  const favorites = useMemo(() => favoriteIds(exercises, scores), [exercises, scores]);
+  const poolSections = useMemo(() => {
+    const favSet = new Set(favorites);
+    const favs = favorites
+      .map((id) => availableExercises.find((e) => e.id === id))
+      .filter((e): e is Exercise => Boolean(e));
+    const rest = availableExercises.filter((e) => !favSet.has(e.id));
+    // Bei der Suche eine einzige Trefferliste (Favoriten zuerst, weiter hervorgehoben) – ohne Zwischenüberschriften.
+    if (poolQuery.trim()) return [{ key: 'treffer', title: null, items: [...favs, ...rest] }];
+    if (favs.length === 0) return [{ key: 'alle', title: null, items: rest }];
+    return [
+      { key: 'favoriten', title: 'Favoriten', items: favs },
+      ...(rest.length > 0 ? [{ key: 'alle', title: 'Alle Übungen', items: rest }] : []),
+    ];
+  }, [favorites, availableExercises, poolQuery]);
 
   // C7: Wiederholung wählen – bei „Wöchentlich“ ohne Tage den Wochentag des Startdatums vorschlagen.
   function changeRepeat(option: RepeatOption) {
@@ -387,22 +408,52 @@ function PlanFormContent() {
               {availableExercises.length === 0 && (
                 <p className="py-6 text-center text-sm text-muted-2">Keine Übungen gefunden.</p>
               )}
-              {availableExercises.map((exercise) => (
-                <button
-                  type="button"
-                  key={exercise.id}
-                  onClick={() => addExerciseToPlan(exercise.id)}
-                  className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-bg-soft px-4 py-3 text-left transition hover:border-primary"
-                >
-                  <span className="min-w-0">
-                    <span className="block truncate text-sm font-semibold text-ink">{exercise.name}</span>
-                    <span className="mt-1.5 flex items-center gap-2 text-xs text-muted-2">
-                      <DifficultyBadge difficulty={exercise.difficulty} />
-                      {formatDuration(exercise.durationSeconds) /* C4: sekundengenau */}
-                    </span>
-                  </span>
-                  <Plus size={18} className="shrink-0 text-primary" />
-                </button>
+              {/* C18: Abschnitte „Favoriten“ und „Alle Übungen“ (Zwischenüberschriften im Stil von „Gewichte“/„Stoppuhr“
+                  in den Statistiken). Favoriten leicht hervorgehoben: getönte Fläche + feiner blauer Rand, App-Blau statt
+                  Sport- oder Streakfarbe; darunter „★ n× genutzt“, damit klar ist, warum die Übung oben steht. */}
+              {poolSections.map((section) => (
+                <div key={section.key} className="flex flex-col gap-2">
+                  {section.title && (
+                    <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wide text-muted-2">
+                      {section.key === 'favoriten' && <Star size={12} className="text-accent" fill="currentColor" aria-hidden="true" />}
+                      {section.title}
+                    </p>
+                  )}
+                  {section.items.map((exercise) => {
+                    const isFavorite = favorites.includes(exercise.id);
+                    const score = scores.get(exercise.id)?.score ?? 0;
+                    return (
+                      <button
+                        type="button"
+                        key={exercise.id}
+                        onClick={() => addExerciseToPlan(exercise.id)}
+                        aria-label={isFavorite ? `${exercise.name} hinzufügen (Favorit, ${score}× genutzt)` : undefined}
+                        className={`flex items-center justify-between gap-3 rounded-2xl border px-4 py-3 text-left transition hover:border-primary ${
+                          isFavorite ? 'border-primary/30 bg-primary-soft/40' : 'border-border bg-bg-soft'
+                        }`}
+                      >
+                        <span className="min-w-0">
+                          {/* C18: „★ n× genutzt“ in der Namenszeile – so bleibt die zweite Zeile wie bisher und am Handy
+                              entsteht kein Umbruch (im Test gefunden: neben „Fortgeschritten“ rutschte der Hinweis um). */}
+                          <span className="flex min-w-0 items-center gap-2">
+                            <span className="block truncate text-sm font-semibold text-ink">{exercise.name}</span>
+                            {isFavorite && (
+                              <span className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap text-xs font-semibold text-accent">
+                                <Star size={11} fill="currentColor" aria-hidden="true" />
+                                {score}× genutzt
+                              </span>
+                            )}
+                          </span>
+                          <span className="mt-1.5 flex items-center gap-2 text-xs text-muted-2">
+                            <DifficultyBadge difficulty={exercise.difficulty} />
+                            {formatDuration(exercise.durationSeconds) /* C4: sekundengenau */}
+                          </span>
+                        </span>
+                        <Plus size={18} className="shrink-0 text-primary" />
+                      </button>
+                    );
+                  })}
+                </div>
               ))}
             </div>
           </div>

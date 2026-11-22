@@ -15,6 +15,7 @@ bis zur Trainingsdurchführung mit Timer.
   Bei Tischtennis zusätzlich der Reiter **Aufschlagtraining** (Live-Tracking gut/schlecht mit Verlaufsdiagramm, C3).
 - **PDF** – jeder Plan lässt sich im Plandetail als PDF (A4 hochkant, mit Abhak-Kästchen) herunterladen (C16).
 - **Duplizieren** – Pläne lassen sich auf der Plankarte und im Plandetail kopieren; Name „(Kopie)“, Datum wählbar, Wiederholung optional (C17).
+- **Favoriten** – die bis zu 5 meistgenutzten Übungen stehen im Übungspool der Planerstellung oben und sind leicht hervorgehoben (C18).
 - **Notizen** – während der Ausführung notieren (automatisch gespeichert), als Verlauf je Übung im Plandetail (C13), dort ein- und ausklappbar (C15).
 - **Stoppuhr** – im Übungsbereich, auf Hundertstel genau, läuft bei Seitenwechsel weiter; bis zu 10 benannte Werte je
   Sportart mit Bestwert (C12).
